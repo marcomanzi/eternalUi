@@ -22,6 +22,7 @@ interface VaadinElementsHandler {
     fun addClickAction(component: Component, action: () -> Unit)
     fun addDataProviderTo(uiComponent: UIComponent, component: Component, dataProvider: com.octopus.eternalUi.domain.db.DataProvider<out Identifiable>)
     fun refresh(component: Component)
+    fun addCssClass(component: Component, uiComponent: UIComponent)
 }
 
 val elementsHandler = Vaadin13UiElementsHandler()
@@ -40,8 +41,16 @@ open class VaadinActuator<T: Any>(private var page: Page<T>): Div(), BeforeEnter
         activateActionsOnComponents()
         activateDataProvidersOnComponents()
         linkDataProviderFiltersToComponents()
+        applyStileApplierFunction()
 
         addDebugButton()
+    }
+
+    private fun applyStileApplierFunction() {
+        uiComponentToVaadinComponent.keys.forEach {
+            elementsHandler.addCssClass(getComponentById(it.id), it)
+            it.styleApplyer?.invoke(this)
+        }
     }
 
     private fun addDebugButton() {
@@ -94,9 +103,9 @@ open class VaadinActuator<T: Any>(private var page: Page<T>): Div(), BeforeEnter
         }
     }
 
-    private fun getComponentById(fieldName: String): Component = vaadinComponentForUi(uiComponentToVaadinComponent.keys.first { it.id == fieldName })
+    fun getComponentById(fieldName: String): Component = vaadinComponentForUi(uiComponentToVaadinComponent.keys.first { it.id == fieldName })
 
-    private fun getUIComponentById(fieldName: String): UIComponent = uiComponentToVaadinComponent.keys.first { it.id == fieldName }
+    fun getUIComponentById(fieldName: String): UIComponent = uiComponentToVaadinComponent.keys.first { it.id == fieldName }
 
     private fun activateRestrictionsOnComponents() {
         page.pageController.enabledRules.forEach { activateRuleOnPage(it) }

@@ -4,23 +4,24 @@ import com.vaadin.flow.component.Component
 import java.util.*
 import kotlin.reflect.KClass
 
-open class VerticalContainer(_id: String, vararg children: UIComponent): UIComponent(_id, containedUIComponents = children.asList())
-open class HorizontalContainer(_id: String, vararg children: UIComponent): UIComponent(_id, containedUIComponents = children.asList())
+open class VerticalContainer(_id: String, vararg children: UIComponent, _cssClassName: String = ""): UIComponent(_id, _cssClassName, containedUIComponents = children.asList())
+open class HorizontalContainer(_id: String, vararg children: UIComponent, _cssClassName: String = ""): UIComponent(_id, _cssClassName, containedUIComponents = children.asList())
 
 fun captionFrom(id: String): String = UtilsUI.captionFromId(id)
 
-data class Label(private val _id: String, val caption: String = captionFrom(_id)): UIComponent(_id)
+data class Label(private val _id: String, private val _cssClassName: String = "", val caption: String = captionFrom(_id)): UIComponent(_id, _cssClassName)
 
 enum class InputType { Text, Password }
-data class Input(private val _id: String, val type: InputType, val caption: String = captionFrom(_id)): UIComponent(_id)
-data class Button(private val _id: String, val caption: String = captionFrom(_id)): UIComponent(_id)
-data class InsideAppLink(private val _id: String, val uiViewClass: Class<out Component>, val caption: String = captionFrom(_id)): UIComponent(_id)
+data class Input(private val _id: String, val type: InputType, private val _cssClassName: String = "", val caption: String = captionFrom(_id)): UIComponent(_id, _cssClassName)
+data class Button(private val _id: String, private val _cssClassName: String = "", val caption: String = captionFrom(_id)): UIComponent(_id, _cssClassName)
+data class InsideAppLink(private val _id: String, val uiViewClass: Class<out Component>, private val _cssClassName: String = "", val caption: String = captionFrom(_id)): UIComponent(_id, _cssClassName)
 
-data class Grid(private val _id: String, val elementType: KClass<out Any>, val columns: List<String> = listOf(), val caption: String = captionFrom(_id)): UIComponent(_id)
+data class Grid(private val _id: String, val elementType: KClass<out Any>, val columns: List<String> = listOf(), private val _cssClassName: String = "", val caption: String = captionFrom(_id)): UIComponent(_id, _cssClassName)
 
 open class EmptyDomain
 
-abstract class Page<T : Any>(val uiView: UIComponent, val pageController: PageController<T>, val pageDomain: PageDomain<T> = PageDomain(EmptyDomain() as T)): UIComponent(UUID.randomUUID().toString()) {
+abstract class Page<T : Any>(val uiView: UIComponent, val pageController: PageController<T>, val pageDomain: PageDomain<T> = PageDomain(EmptyDomain() as T)):
+        UIComponent(UUID.randomUUID().toString(), pageDomain.javaClass.simpleName) {
     private val observers: MutableMap<String, (Any) -> Unit> = mutableMapOf()
     fun hasValues(vararg ids: String): Boolean = ids.all { getFieldValue(it).let { value -> value != null && value.toString().isNotEmpty() } }
     fun toDebugString(): String = fields().map { "$it: ${getFieldValue(it)}" }.joinToString { it }.replace(",", "</br>")

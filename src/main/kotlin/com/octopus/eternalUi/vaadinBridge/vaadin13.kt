@@ -25,8 +25,8 @@ class Vaadin13UiElementsHandler: VaadinElementsHandler {
 
     override fun createFor(uiComponent: UIComponent): Component =
             when(uiComponent) {
-                is VerticalContainer -> VerticalLayout().apply { isSpacing = false; isMargin = false }
-                is HorizontalContainer -> HorizontalLayout().apply { isMargin = false }
+                is VerticalContainer -> VerticalLayout().apply { isSpacing = false; isMargin = false; setSizeFull() }
+                is HorizontalContainer -> HorizontalLayout().apply { isMargin = false; setSizeFull() }
                 is com.octopus.eternalUi.domain.Label -> Label(uiComponent.caption)
                 is Input -> createFor(uiComponent)
                 is Button -> com.vaadin.flow.component.button.Button(uiComponent.caption)
@@ -35,8 +35,13 @@ class Vaadin13UiElementsHandler: VaadinElementsHandler {
                 else -> Div()
             }
 
+    override fun addCssClass(component: Component, uiComponent: UIComponent) {
+        (component as HasStyle).addClassName("base.css.${uiComponent.javaClass.simpleName}")
+    }
+
     private fun setupGrid(grid: com.vaadin.flow.component.grid.Grid<out Any>, columns: List<String>) {
         grid.setColumns(*columns.toTypedArray())
+        grid.columns.forEach { it.isSortable = false }
     }
 
     private fun createFor(input: Input): Component =
@@ -80,11 +85,11 @@ class Vaadin13UiElementsHandler: VaadinElementsHandler {
 
     override fun addDataProviderTo(uiComponent: UIComponent, component: Component, dataProvider: com.octopus.eternalUi.domain.db.DataProvider<out Identifiable>) {
         when(component) {
-            is com.vaadin.flow.component.grid.Grid<*> -> addDataProviderToGrid(uiComponent as Grid, component as com.vaadin.flow.component.grid.Grid<Identifiable>, dataProvider)
+            is com.vaadin.flow.component.grid.Grid<*> -> addDataProviderToGrid(component as com.vaadin.flow.component.grid.Grid<Identifiable>, dataProvider)
         }
     }
 
-    private fun addDataProviderToGrid(uiGrid: Grid, grid: com.vaadin.flow.component.grid.Grid<out Identifiable>, dataProvider: com.octopus.eternalUi.domain.db.DataProvider<out Identifiable>) {
+    private fun addDataProviderToGrid(grid: com.vaadin.flow.component.grid.Grid<out Identifiable>, dataProvider: com.octopus.eternalUi.domain.db.DataProvider<out Identifiable>) {
         grid.dataProvider = DataProviderWrapper<Identifiable>(dataProvider)
     }
 

@@ -1,12 +1,12 @@
 package com.octopus.eternalUi.example
 
 import com.octopus.eternalUi.domain.*
-import com.octopus.eternalUi.domain.InputType.*
+import com.octopus.eternalUi.domain.InputType.Text
 import com.octopus.eternalUi.example.domain.User
 import com.octopus.eternalUi.example.domain.UserDataProvider
 import com.octopus.eternalUi.example.domain.UserRepository
 import com.octopus.eternalUi.vaadinBridge.VaadinActuator
-import com.vaadin.flow.component.notification.Notification
+import com.vaadin.flow.component.dependency.HtmlImport
 import com.vaadin.flow.router.Route
 import com.vaadin.flow.spring.annotation.UIScope
 import com.vaadin.flow.theme.Theme
@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service
 @Route("")
 @Theme(Lumo::class)
 @UIScope
+@HtmlImport("backoffice-styles.html")
 class HomeView(@Autowired var home: Home): VaadinActuator<HomeDomain>(home)
 
 @Component

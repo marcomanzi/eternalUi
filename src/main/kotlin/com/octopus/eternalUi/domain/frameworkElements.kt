@@ -1,6 +1,8 @@
 package com.octopus.eternalUi.domain
 
 import com.octopus.eternalUi.domain.db.Identifiable
+import com.octopus.eternalUi.vaadinBridge.VaadinActuator
+import com.vaadin.flow.component.Component
 
 interface UIDomain
 interface UIPresenter
@@ -18,8 +20,12 @@ class EnabledRule<T: Any>(val onComponentId: String, val condition: (Page<T>) ->
 class WasInteractedWith<T: Any>(val interactedComponentId: String): Rule<T>
 class NoRule<T: Any>: Rule<T>
 
-abstract class UIComponent(val id: String, val containedUIComponents : List<UIComponent> = listOf(), val metadata: Map<String, out Any> = mapOf()) {
+abstract class UIComponent(val id: String, val cssClassName: String, val containedUIComponents : List<UIComponent> = listOf(), val metadata: Map<String, out Any> = mapOf()) {
+    var styleApplyer: ((VaadinActuator<*>) -> Unit)? = null
     fun getUIComponentById(id: String) = (containedUIComponents + this).first { it.id == id }
+    fun setStyle(styleApplier: (VaadinActuator<*>) -> Unit) {
+        this.styleApplyer = styleApplier
+    }
 }
 
 open class PageController<T: Any>(val actions: List<Action<T>> = listOf(),
