@@ -18,14 +18,14 @@ import org.springframework.stereotype.Service
 @Route("")
 @Theme(Lumo::class)
 @UIScope
-@HtmlImport("backoffice-styles.html")
+@HtmlImport("example-style.html")
 class HomeView(@Autowired var home: Home): VaadinActuator<HomeDomain>(home)
 
 @Component
 class Home(@Autowired var homeController: HomeController): Page<HomeDomain>(
         VerticalContainer("homeContainer",
                 InsideAppLink("users", UsersView::class.java),
-                Label("User Search"),
+                Label("User Search", "h1"),
                 UserSearchForm(),
                 Grid("usersGrid", User::class, listOf("name", "address")),
                 Input("name", Text),

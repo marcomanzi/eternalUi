@@ -23,6 +23,7 @@ interface VaadinElementsHandler {
     fun addDataProviderTo(uiComponent: UIComponent, component: Component, dataProvider: com.octopus.eternalUi.domain.db.DataProvider<out Identifiable>)
     fun refresh(component: Component)
     fun addCssClass(component: Component, uiComponent: UIComponent)
+    fun addCssClass(component: Component, cssClassName: String)
 }
 
 val elementsHandler = Vaadin13UiElementsHandler()
@@ -49,6 +50,7 @@ open class VaadinActuator<T: Any>(private var page: Page<T>): Div(), BeforeEnter
     private fun applyStileApplierFunction() {
         uiComponentToVaadinComponent.keys.forEach {
             elementsHandler.addCssClass(getComponentById(it.id), it)
+            elementsHandler.addCssClass(getComponentById(it.id), it.cssClassName)
             it.styleApplyer?.invoke(this)
         }
     }

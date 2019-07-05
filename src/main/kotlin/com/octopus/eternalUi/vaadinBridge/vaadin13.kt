@@ -36,7 +36,11 @@ class Vaadin13UiElementsHandler: VaadinElementsHandler {
             }
 
     override fun addCssClass(component: Component, uiComponent: UIComponent) {
-        (component as HasStyle).addClassName("base.css.${uiComponent.javaClass.simpleName}")
+        (component as HasStyle).addClassName(uiComponent.javaClass.simpleName)
+    }
+
+    override fun addCssClass(component: Component, cssClassName: String) {
+        if (cssClassName.isNotEmpty()) (component as HasStyle).addClassName(cssClassName)
     }
 
     private fun setupGrid(grid: com.vaadin.flow.component.grid.Grid<out Any>, columns: List<String>) {
