@@ -14,7 +14,8 @@ import com.vaadin.flow.component.textfield.TextField
 import com.vaadin.flow.data.value.ValueChangeMode
 import com.vaadin.flow.router.RouterLink
 
-class Vaadin13UiElementsHandler: VaadinElementsHandler {
+@Suppress("UNCHECKED_CAST")
+class Vaadin14UiElementsHandler: VaadinElementsHandler {
     override fun debugButton(toDebugStringSupplier: () -> String): Component =
             com.vaadin.flow.component.button.Button("Debug").apply { addClickListener {
                 Dialog(Label().apply { element.setProperty("innerHTML", toDebugStringSupplier()) }).apply { open()

@@ -20,7 +20,7 @@ class EnabledRule<T: Any>(val onComponentId: String, val condition: (Page<T>) ->
 class WasInteractedWith<T: Any>(val interactedComponentId: String): Rule<T>
 class NoRule<T: Any>: Rule<T>
 
-abstract class UIComponent(val id: String, val cssClassName: String, val containedUIComponents : List<UIComponent> = listOf(), val metadata: Map<String, out Any> = mapOf()) {
+abstract class UIComponent(val id: String, val cssClassName: String, val containedUIComponents : List<UIComponent> = listOf(), val metadata: Map<String, Any> = mapOf()) {
     var styleApplyer: ((VaadinActuator<*>) -> Unit)? = null
     fun getUIComponentById(id: String) = (containedUIComponents + this).first { it.id == id }
     fun setStyle(styleApplier: (VaadinActuator<*>) -> Unit) {

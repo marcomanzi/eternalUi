@@ -25,9 +25,9 @@ class UserDataProvider(val userRepository: UserRepository): AbstractDataProvider
     }
 
     private fun specificationFromFilters(filters: MutableMap<String, String>?): (Root<User>, CriteriaQuery<*>, CriteriaBuilder) -> Predicate =
-            { root, cq, cb ->
+            { root, _, cb ->
                 var pred = cb.and(cb.conjunction())
-                filters?.get("searchName")?.let { pred = cb.and(pred, cb.like(root.get("name"), "%$it%")) }
+                filters?.get("searchName")?.let { pred = cb.and(pred, cb.like(cb.lower(root.get("name")), "%${it.toLowerCase()}%")) }
                 pred
             }
 

@@ -20,6 +20,7 @@ data class Grid(private val _id: String, val elementType: KClass<out Any>, val c
 
 open class EmptyDomain
 
+@Suppress("UNCHECKED_CAST")
 abstract class Page<T : Any>(val uiView: UIComponent, val pageController: PageController<T>, val pageDomain: PageDomain<T> = PageDomain(EmptyDomain() as T)):
         UIComponent(UUID.randomUUID().toString(), pageDomain.javaClass.simpleName) {
     private val observers: MutableMap<String, (Any) -> Unit> = mutableMapOf()

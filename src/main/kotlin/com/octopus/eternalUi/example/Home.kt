@@ -57,8 +57,6 @@ class HomeBackend {
         return HomeDomain()
     }
 
-    fun userListAsString(): String = userRepository.findAll().joinToString("\n") { it.toString() }
-
     fun save1000Users() {
         userRepository.saveAll((1 .. 1000).map { User("Test $it" ) })
     }

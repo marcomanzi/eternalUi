@@ -26,7 +26,7 @@ interface VaadinElementsHandler {
     fun addCssClass(component: Component, cssClassName: String)
 }
 
-val elementsHandler = Vaadin13UiElementsHandler()
+val elementsHandler = Vaadin14UiElementsHandler()
 
 open class VaadinActuator<T: Any>(private var page: Page<T>): Div(), BeforeEnterObserver {
 

@@ -4,6 +4,7 @@ import com.vaadin.flow.data.provider.Query;
 
 import java.util.stream.Stream;
 
+@SuppressWarnings("unchecked")
 public class DataProviderWrapper<T extends Identifiable> extends com.vaadin.flow.data.provider.AbstractDataProvider<T, String> {
 
     private DataProvider<T> dataProvider;
