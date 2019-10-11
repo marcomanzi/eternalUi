@@ -40,7 +40,12 @@ abstract class Page<T : Any>(val uiView: UIComponent, val pageController: PageCo
         val field = pageDomain.dataClass.javaClass.getDeclaredField(id)
         field.isAccessible = true
         observers[id]?.invoke(value)
-        field.set(pageDomain.dataClass, value)
+        if (value is Optional<*> && value.isPresent) {
+            field.set(pageDomain.dataClass, value.get())
+        } else {
+            field.set(pageDomain.dataClass, value)
+        }
     }
+
     fun fields(): List<String> = pageDomain.dataClass.javaClass.declaredFields.map { it.name }
 }

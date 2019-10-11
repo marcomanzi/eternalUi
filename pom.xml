@@ -21,7 +21,7 @@
         <!-- Frontend -->
         <node.version>v8.16.0</node.version>
         <yarn.version>v1.16.0</yarn.version>
-		<vaadin.version>14.0.4</vaadin.version>
+		<vaadin.version>14.0.8</vaadin.version>
         <maven.resources.plugin.version>3.0.2</maven.resources.plugin.version>
         <maven.surefire.plugin.version>2.21.0</maven.surefire.plugin.version>
         <frontend.maven.plugin.version>1.6</frontend.maven.plugin.version>
@@ -129,6 +129,16 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>exec</classifier>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>com.vaadin</groupId>

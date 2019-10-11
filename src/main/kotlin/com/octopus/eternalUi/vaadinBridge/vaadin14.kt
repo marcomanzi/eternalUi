@@ -13,6 +13,7 @@ import com.vaadin.flow.component.textfield.PasswordField
 import com.vaadin.flow.component.textfield.TextField
 import com.vaadin.flow.data.value.ValueChangeMode
 import com.vaadin.flow.router.RouterLink
+import java.util.*
 
 @Suppress("UNCHECKED_CAST")
 class Vaadin14UiElementsHandler: VaadinElementsHandler {
@@ -45,6 +46,7 @@ class Vaadin14UiElementsHandler: VaadinElementsHandler {
     }
 
     private fun setupGrid(grid: com.vaadin.flow.component.grid.Grid<out Any>, columns: List<String>) {
+        grid.setSelectionMode(com.vaadin.flow.component.grid.Grid.SelectionMode.SINGLE)
         grid.setColumns(*columns.toTypedArray())
         grid.columns.forEach { it.isSortable = false }
     }
@@ -63,20 +65,25 @@ class Vaadin14UiElementsHandler: VaadinElementsHandler {
         when(componentById) {
             is TextField -> componentById.value = fieldValue.toString()
             is PasswordField -> componentById.value = fieldValue.toString()
+            is com.vaadin.flow.component.grid.Grid<*> -> if (fieldValue is Optional<*> && fieldValue.isPresent) {
+                (componentById as com.vaadin.flow.component.grid.Grid<Any>).select(fieldValue.get())
+            }
         }
     }
 
-    override fun addValueChangeListener(component: Component, listener: (String) -> Unit) {
+    override fun addValueChangeListener(component: Component, listener: (Any) -> Unit) {
         when(component) {
             is TextField -> component.addValueChangeListener { listener.invoke(it.value) }
             is PasswordField -> component.addValueChangeListener { listener.invoke(it.value) }
+            is com.vaadin.flow.component.grid.Grid<*> -> component.addSelectionListener { listener.invoke(it.firstSelectedItem) }
         }
     }
 
-    override fun addOnChangeAction(component: Component, listener: (String) -> Unit) {
+    override fun addOnChangeAction(component: Component, listener: (Any) -> Unit) {
         when(component) {
             is TextField -> component.addValueChangeListener { listener.invoke(it.value) }
             is PasswordField -> component.addValueChangeListener { listener.invoke(it.value) }
+            is com.vaadin.flow.component.grid.Grid<*> -> component.addSelectionListener { listener.invoke(it.firstSelectedItem) }
         }
     }
 
@@ -85,7 +92,10 @@ class Vaadin14UiElementsHandler: VaadinElementsHandler {
     }
 
     override fun addClickAction(component: Component, action: () -> Unit) {
-        (component as ClickNotifier<*>).addClickListener { action() }
+        when(component) {
+            is com.vaadin.flow.component.grid.Grid<*> -> component.addItemClickListener { action() }
+            else -> (component as ClickNotifier<*>).addClickListener { action() }
+        }
     }
 
     override fun addDataProviderTo(uiComponent: UIComponent, component: Component, dataProvider: com.octopus.eternalUi.domain.db.DataProvider<out Identifiable>) {

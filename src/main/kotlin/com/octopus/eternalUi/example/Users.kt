@@ -2,7 +2,6 @@ package com.octopus.eternalUi.example
 
 import com.octopus.eternalUi.domain.*
 import com.octopus.eternalUi.vaadinBridge.VaadinActuator
-import com.vaadin.flow.component.dependency.HtmlImport
 import com.vaadin.flow.component.dependency.JsModule
 import com.vaadin.flow.router.Route
 import com.vaadin.flow.spring.annotation.UIScope

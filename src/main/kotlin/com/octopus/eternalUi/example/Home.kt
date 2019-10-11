@@ -7,6 +7,7 @@ import com.octopus.eternalUi.example.domain.UserDataProvider
 import com.octopus.eternalUi.example.domain.UserRepository
 import com.octopus.eternalUi.vaadinBridge.VaadinActuator
 import com.vaadin.flow.component.dependency.HtmlImport
+import com.vaadin.flow.component.notification.Notification
 import com.vaadin.flow.router.Route
 import com.vaadin.flow.spring.annotation.UIScope
 import com.vaadin.flow.theme.Theme
@@ -38,14 +39,15 @@ class UserSearchForm: HorizontalContainer("searchForm", Input("searchName", Text
 @Service
 class HomeController(@Autowired var homeBackend: HomeBackend): PageController<HomeDomain>(
         actions = listOf(OnClickAction("Save") { homeBackend.saveUser(it) },
-                OnClickReader("save1000Users") { it.apply { homeBackend.save1000Users() } }),
+                OnClickReader("save1000Users") { it.apply { homeBackend.save1000Users() }},
+                OnClickAction("usersGrid") { it.apply { homeBackend.showUserForm(it) }}),
         enabledRules = listOf(EnabledRule("Save") { page -> page.hasValues("name")}),
         dataProviders = listOf(DataProvider("usersGrid", homeBackend.userDataProvider,
                 OrRule(WasInteractedWith("Save"), WasInteractedWith("save1000Users")) ,
                 "searchName"))
 )
 
-data class HomeDomain(val name: String = "")
+data class HomeDomain(val name: String = "", val usersGrid: User? = null)
 
 @Service
 class HomeBackend {
@@ -60,4 +62,10 @@ class HomeBackend {
     fun save1000Users() {
         userRepository.saveAll((1 .. 1000).map { User("Test $it" ) })
     }
+
+    fun showUserForm(homeDomain: HomeDomain): HomeDomain {
+        Notification.show(homeDomain.usersGrid!!.name)
+        return HomeDomain()
+    }
+
 }
