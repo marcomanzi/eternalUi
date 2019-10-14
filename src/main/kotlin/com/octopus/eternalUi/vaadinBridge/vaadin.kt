@@ -14,7 +14,7 @@ interface VaadinElementsHandler {
     fun addToParent(parent: Component, child: Component): Component = addToParent(parent, listOf(child))
 
     fun debugButton(toDebugStringSupplier: () -> String): Component
-    fun setValue(fieldValue: Any, componentById: Component)
+    fun setValue(fieldValue: Any?, componentById: Component)
     fun addValueChangeListener(component: Component, listener: (Any) -> Unit)
     fun addOnChangeAction(component: Component, listener: (Any) -> Unit)
 
@@ -158,8 +158,6 @@ open class VaadinActuator<T: Any>(private var page: Page<T>): Div(), BeforeEnter
         }
         return { refreshAfter(it) }
     }
-
-
 
     private fun applyNewDomainOnPage(dataClass: Any) {
         dataClass.javaClass.declaredFields.forEach { declaredField ->

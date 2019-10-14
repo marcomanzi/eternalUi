@@ -23,10 +23,10 @@ open class EmptyDomain
 @Suppress("UNCHECKED_CAST")
 abstract class Page<T : Any>(val uiView: UIComponent, val pageController: PageController<T>, val pageDomain: PageDomain<T> = PageDomain(EmptyDomain() as T)):
         UIComponent(UUID.randomUUID().toString(), pageDomain.javaClass.simpleName) {
-    private val observers: MutableMap<String, (Any) -> Unit> = mutableMapOf()
+    private val observers: MutableMap<String, (Any?) -> Unit> = mutableMapOf()
     fun hasValues(vararg ids: String): Boolean = ids.all { getFieldValue(it).let { value -> value != null && value.toString().isNotEmpty() } }
     fun toDebugString(): String = fields().map { "$it: ${getFieldValue(it)}" }.joinToString { it }.replace(",", "</br>")
-    fun addFieldChangeObserver(fieldName: String, observer: (Any) -> Unit) {
+    fun addFieldChangeObserver(fieldName: String, observer: (Any?) -> Unit) {
         observers[fieldName] = observer
     }
 
@@ -36,14 +36,14 @@ abstract class Page<T : Any>(val uiView: UIComponent, val pageController: PageCo
         return field.get(pageDomain.dataClass)
     }
 
-    fun setFieldValue(id: String, value: Any) {
+    fun setFieldValue(id: String, value: Any?) {
         val field = pageDomain.dataClass.javaClass.getDeclaredField(id)
         field.isAccessible = true
         observers[id]?.invoke(value)
-        if (value is Optional<*> && value.isPresent) {
-            field.set(pageDomain.dataClass, value.get())
-        } else {
-            field.set(pageDomain.dataClass, value)
+        when (value) {
+            null -> field.set(pageDomain.dataClass, value)
+            is Optional<*> -> if (value.isPresent) field.set(pageDomain.dataClass, value.get()) else field.set(pageDomain.dataClass, null)
+            else -> field.set(pageDomain.dataClass, value)
         }
     }
 

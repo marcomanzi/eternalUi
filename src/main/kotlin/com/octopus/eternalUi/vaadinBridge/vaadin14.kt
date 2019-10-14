@@ -61,13 +61,15 @@ class Vaadin14UiElementsHandler: VaadinElementsHandler {
         component.apply { (this as HasComponents).removeAll() }
     }
 
-    override fun setValue(fieldValue: Any, componentById: Component) {
+    override fun setValue(fieldValue: Any?, componentById: Component) {
         when(componentById) {
             is TextField -> componentById.value = fieldValue.toString()
             is PasswordField -> componentById.value = fieldValue.toString()
-            is com.vaadin.flow.component.grid.Grid<*> -> if (fieldValue is Optional<*> && fieldValue.isPresent) {
-                (componentById as com.vaadin.flow.component.grid.Grid<Any>).select(fieldValue.get())
-            }
+            is com.vaadin.flow.component.grid.Grid<*> ->
+                if (fieldValue == null) componentById.deselectAll()
+                else if (fieldValue is Optional<*> && fieldValue.isPresent) {
+                    (componentById as com.vaadin.flow.component.grid.Grid<Any>).select(fieldValue.get())
+                }
         }
     }
 

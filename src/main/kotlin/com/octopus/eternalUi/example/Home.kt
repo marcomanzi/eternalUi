@@ -40,7 +40,7 @@ class UserSearchForm: HorizontalContainer("searchForm", Input("searchName", Text
 class HomeController(@Autowired var homeBackend: HomeBackend): PageController<HomeDomain>(
         actions = listOf(OnClickAction("Save") { homeBackend.saveUser(it) },
                 OnClickReader("save1000Users") { it.apply { homeBackend.save1000Users() }},
-                OnClickAction("usersGrid") { it.apply { homeBackend.showUserForm(it) }}),
+                OnClickAction("usersGrid") { homeBackend.showUserForm(it)} ),
         enabledRules = listOf(EnabledRule("Save") { page -> page.hasValues("name")}),
         dataProviders = listOf(DataProvider("usersGrid", homeBackend.userDataProvider,
                 OrRule(WasInteractedWith("Save"), WasInteractedWith("save1000Users")) ,
@@ -67,5 +67,4 @@ class HomeBackend {
         Notification.show(homeDomain.usersGrid!!.name)
         return HomeDomain()
     }
-
 }
