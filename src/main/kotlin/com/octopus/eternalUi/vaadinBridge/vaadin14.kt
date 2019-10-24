@@ -7,6 +7,7 @@ import com.vaadin.flow.component.*
 import com.vaadin.flow.component.dialog.Dialog
 import com.vaadin.flow.component.html.Div
 import com.vaadin.flow.component.html.Label
+import com.vaadin.flow.component.notification.Notification
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout
 import com.vaadin.flow.component.orderedlayout.VerticalLayout
 import com.vaadin.flow.component.textfield.PasswordField
@@ -73,6 +74,15 @@ class Vaadin14UiElementsHandler: VaadinElementsHandler {
         }
     }
 
+    override fun getValue(componentById: Component): Any? =
+            when(componentById) {
+                is TextField -> componentById.value
+                is PasswordField -> componentById.value
+                is com.vaadin.flow.component.grid.Grid<*> -> if (componentById.selectedItems.isNotEmpty()) componentById.selectedItems.first() else null
+                else -> null
+            }
+
+
     override fun addValueChangeListener(component: Component, listener: (Any) -> Unit) {
         when(component) {
             is TextField -> component.addValueChangeListener { listener.invoke(it.value) }
@@ -113,6 +123,22 @@ class Vaadin14UiElementsHandler: VaadinElementsHandler {
     override fun refresh(component: Component) {
         when (component) {
             is com.vaadin.flow.component.grid.Grid<*> -> component.dataProvider.refreshAll()
+        }
+    }
+
+    override fun <T: Any> showModalWindow(modalWindow: ModalWindow<T>) {
+        Dialog().apply {
+            add(EternalUI(modalWindow.page).prepareUI().mainPageComponentForUI())
+            addDialogCloseActionListener { modalWindow.onClose(modalWindow.page.pageDomain.dataClass) }
+        }.open()
+    }
+
+
+    override fun showUserMessage(userMessage: UserMessage) {
+        Notification(userMessage.message).apply {
+            // when(userMessage.type) //TODO
+            duration = 2000
+            open()
         }
     }
 }

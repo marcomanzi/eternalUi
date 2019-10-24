@@ -5,9 +5,11 @@ import com.octopus.eternalUi.domain.InputType.Text
 import com.octopus.eternalUi.example.domain.User
 import com.octopus.eternalUi.example.domain.UserDataProvider
 import com.octopus.eternalUi.example.domain.UserRepository
-import com.octopus.eternalUi.vaadinBridge.VaadinActuator
-import com.vaadin.flow.component.dependency.HtmlImport
-import com.vaadin.flow.component.notification.Notification
+import com.octopus.eternalUi.example.user.UserDomain
+import com.octopus.eternalUi.example.user.UserForm
+import com.octopus.eternalUi.example.user.UserView
+import com.octopus.eternalUi.vaadinBridge.EternalUI
+import com.vaadin.flow.component.dependency.JsModule
 import com.vaadin.flow.router.Route
 import com.vaadin.flow.spring.annotation.UIScope
 import com.vaadin.flow.theme.Theme
@@ -19,8 +21,8 @@ import org.springframework.stereotype.Service
 @Route("")
 @Theme(Lumo::class)
 @UIScope
-@HtmlImport("example-style.html")
-class HomeView(@Autowired var home: Home): VaadinActuator<HomeDomain>(home)
+@JsModule("./example-style.js")
+class HomeView(@Autowired var home: Home): EternalUI<HomeDomain>(home)
 
 @Component
 class Home(@Autowired var homeController: HomeController): Page<HomeDomain>(
@@ -29,7 +31,8 @@ class Home(@Autowired var homeController: HomeController): Page<HomeDomain>(
                 Label("User Search", "h1"),
                 UserSearchForm(),
                 Grid("usersGrid", User::class, listOf("name", "address")),
-                Input("name", Text),
+                HorizontalContainer("userFormLine1", Input("name", Text), Input("surname", Text), Input("surname2", Text), Input("age", Text)),
+                HorizontalContainer("userFormLine2", Input("vatNumber", Text), Input("city", Text), Input("country", Text)),
                 HorizontalContainer("actions", Button("Save"), Button("save1000Users", caption = "Save  1000 Users"))),
         homeController,
         PageDomain(HomeDomain()))
@@ -47,24 +50,29 @@ class HomeController(@Autowired var homeBackend: HomeBackend): PageController<Ho
                 "searchName"))
 )
 
-data class HomeDomain(val name: String = "", val usersGrid: User? = null)
+data class HomeDomain(val name: String = "", val surname: String = "", val country: String = "", val usersGrid: User? = null, val city: String = "")
 
 @Service
 class HomeBackend {
     @Autowired lateinit var userRepository: UserRepository
     @Autowired lateinit var userDataProvider: UserDataProvider
+    @Autowired lateinit var userForm: UserForm
 
     fun saveUser(homeDomain: HomeDomain): HomeDomain {
-        userRepository.save(User(homeDomain.name))
+        userRepository.save(User(name = homeDomain.name))
         return HomeDomain()
     }
 
     fun save1000Users() {
-        userRepository.saveAll((1 .. 1000).map { User("Test $it" ) })
+        userRepository.saveAll((1 .. 1000).map { User(name = "Test $it" ) })
     }
 
     fun showUserForm(homeDomain: HomeDomain): HomeDomain {
-        Notification.show(homeDomain.usersGrid!!.name)
-        return HomeDomain()
+        homeDomain.usersGrid?.let {
+            EternalUI.showInUI(ModalWindow("modalUserForm", userForm.withUser(UserDomain(id = it.id, name = it.name))))
+            EternalUI.showInUI(UserMessage(it.name))
+            return HomeDomain(it.name, "Pippo", "EU", it)
+        }
+        return homeDomain
     }
 }

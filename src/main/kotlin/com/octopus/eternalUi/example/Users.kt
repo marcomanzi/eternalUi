@@ -1,7 +1,7 @@
 package com.octopus.eternalUi.example
 
 import com.octopus.eternalUi.domain.*
-import com.octopus.eternalUi.vaadinBridge.VaadinActuator
+import com.octopus.eternalUi.vaadinBridge.EternalUI
 import com.vaadin.flow.component.dependency.JsModule
 import com.vaadin.flow.router.Route
 import com.vaadin.flow.spring.annotation.UIScope
@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service
 @Theme(Lumo::class)
 @UIScope
 @JsModule("./example-style.js")
-class UsersView(@Autowired var home: UserPage): VaadinActuator<EmptyDomain>(home)
+class UsersView(@Autowired var home: UserPage): EternalUI<EmptyDomain>(home)
 
 @Component
 class UserPage(@Autowired var userController: UserController): Page<EmptyDomain>(

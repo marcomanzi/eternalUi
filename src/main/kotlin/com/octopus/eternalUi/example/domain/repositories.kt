@@ -7,18 +7,19 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor
 import org.springframework.stereotype.Component
 import org.springframework.stereotype.Repository
+import java.util.*
 import javax.persistence.criteria.CriteriaBuilder
 import javax.persistence.criteria.CriteriaQuery
 import javax.persistence.criteria.Predicate
 import javax.persistence.criteria.Root
 
 @Repository
-interface UserRepository: JpaSpecificationExecutor<User>, JpaRepository<User, String>
+interface UserRepository: JpaSpecificationExecutor<User>, JpaRepository<User, UUID>
 
 @Component
 class UserDataProvider(val userRepository: UserRepository): AbstractDataProvider<User>() {
 
-    override fun find(id: String?): User = userRepository.findById(id!!).get()
+    override fun find(id: String?): User = userRepository.findById(UUID.fromString(id!!)).get()
 
     override fun page(page: Page?, filters: MutableMap<String, String>?): MutableList<User> {
         return userRepository.findAll(specificationFromFilters(filters), PageRequest.of(page!!.page, page.size)).content

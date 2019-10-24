@@ -6,13 +6,17 @@ import kotlin.reflect.KClass
 
 open class VerticalContainer(_id: String, vararg children: UIComponent, _cssClassName: String = ""): UIComponent(_id, _cssClassName, containedUIComponents = children.asList())
 open class HorizontalContainer(_id: String, vararg children: UIComponent, _cssClassName: String = ""): UIComponent(_id, _cssClassName, containedUIComponents = children.asList())
+open class ModalWindow<T: Any>(_id: String, val page: Page<T>, val onClose: (T) -> Unit = {}, _cssClassName: String = ""): UIComponent(_id, _cssClassName)
+
+enum class UserMessageType { INFO }
+open class UserMessage(val message: String, val type: UserMessageType = UserMessageType.INFO): UIComponent(UUID.randomUUID().toString(), "")
 
 fun captionFrom(id: String): String = UtilsUI.captionFromId(id)
 
 data class Label(private val _id: String, private val _cssClassName: String = "", val caption: String = captionFrom(_id)): UIComponent(_id, _cssClassName)
 
 enum class InputType { Text, Password }
-data class Input(private val _id: String, val type: InputType, private val _cssClassName: String = "", val caption: String = captionFrom(_id)): UIComponent(_id, _cssClassName)
+data class Input(private val _id: String, val type: InputType = InputType.Text, private val _cssClassName: String = "", val caption: String = captionFrom(_id)): UIComponent(_id, _cssClassName)
 data class Button(private val _id: String, private val _cssClassName: String = "", val caption: String = captionFrom(_id)): UIComponent(_id, _cssClassName)
 data class InsideAppLink(private val _id: String, val uiViewClass: Class<out Component>, private val _cssClassName: String = "", val caption: String = captionFrom(_id)): UIComponent(_id, _cssClassName)
 
@@ -21,7 +25,7 @@ data class Grid(private val _id: String, val elementType: KClass<out Any>, val c
 open class EmptyDomain
 
 @Suppress("UNCHECKED_CAST")
-abstract class Page<T : Any>(val uiView: UIComponent, val pageController: PageController<T>, val pageDomain: PageDomain<T> = PageDomain(EmptyDomain() as T)):
+abstract class Page<T : Any>(val uiView: UIComponent, val pageController: PageController<T>, var pageDomain: PageDomain<T> = PageDomain(EmptyDomain() as T)):
         UIComponent(UUID.randomUUID().toString(), pageDomain.javaClass.simpleName) {
     private val observers: MutableMap<String, (Any?) -> Unit> = mutableMapOf()
     fun hasValues(vararg ids: String): Boolean = ids.all { getFieldValue(it).let { value -> value != null && value.toString().isNotEmpty() } }

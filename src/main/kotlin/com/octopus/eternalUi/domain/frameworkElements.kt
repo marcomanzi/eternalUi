@@ -1,29 +1,16 @@
 package com.octopus.eternalUi.domain
 
 import com.octopus.eternalUi.domain.db.Identifiable
-import com.octopus.eternalUi.vaadinBridge.VaadinActuator
-import com.vaadin.flow.component.Component
+import com.octopus.eternalUi.vaadinBridge.EternalUI
 
 interface UIDomain
 interface UIPresenter
 interface Rule<T: Any>
-abstract class Action<T: Any>(val onComponentId: String)
-
-class OnClickAction<T: Any>(_onComponentId: String, val onDataDomainClassFunction: (T) -> T): Action<T>(_onComponentId)
-class OnClickReader<T: Any>(_onComponentId: String, val onDataDomainClassReader: (T) -> Unit): Action<T>(_onComponentId)
-class OnChangeAction<T: Any>(_onComponentId: String, val onDataDomainClassFunction: (T) -> T): Action<T>(_onComponentId)
-class OnChangeReader<T: Any>(_onComponentId: String, val onDataDomainClassReader: (T) -> Unit): Action<T>(_onComponentId)
-
-class AndRule<T: Any>(vararg val rules: Rule<T>): Rule<T>
-class OrRule<T: Any>(vararg val rules: Rule<T>): Rule<T>
-class EnabledRule<T: Any>(val onComponentId: String, val condition: (Page<T>) -> Boolean): Rule<T>
-class WasInteractedWith<T: Any>(val interactedComponentId: String): Rule<T>
-class NoRule<T: Any>: Rule<T>
 
 abstract class UIComponent(val id: String, val cssClassName: String, val containedUIComponents : List<UIComponent> = listOf(), val metadata: Map<String, Any> = mapOf()) {
-    var styleApplyer: ((VaadinActuator<*>) -> Unit)? = null
+    var styleApplyer: ((EternalUI<*>) -> Unit)? = null
     fun getUIComponentById(id: String) = (containedUIComponents + this).first { it.id == id }
-    fun setStyle(styleApplier: (VaadinActuator<*>) -> Unit) {
+    fun setStyle(styleApplier: (EternalUI<*>) -> Unit) {
         this.styleApplyer = styleApplier
     }
 }

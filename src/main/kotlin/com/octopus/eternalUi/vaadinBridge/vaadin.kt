@@ -15,6 +15,7 @@ interface VaadinElementsHandler {
 
     fun debugButton(toDebugStringSupplier: () -> String): Component
     fun setValue(fieldValue: Any?, componentById: Component)
+    fun getValue(componentById: Component): Any?
     fun addValueChangeListener(component: Component, listener: (Any) -> Unit)
     fun addOnChangeAction(component: Component, listener: (Any) -> Unit)
 
@@ -24,13 +25,19 @@ interface VaadinElementsHandler {
     fun refresh(component: Component)
     fun addCssClass(component: Component, uiComponent: UIComponent)
     fun addCssClass(component: Component, cssClassName: String)
+    fun <T: Any> showModalWindow(modalWindow: ModalWindow<T>)
+    fun showUserMessage(userMessage: UserMessage)
 }
 
 val elementsHandler = Vaadin14UiElementsHandler()
 
-open class VaadinActuator<T: Any>(private var page: Page<T>): Div(), BeforeEnterObserver {
+open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
 
     private lateinit var uiComponentToVaadinComponent: Map<UIComponent, Component>
+
+    fun prepareUI(): EternalUI<T> = apply {
+        beforeEnter(null)
+    }
 
     override fun beforeEnter(be: BeforeEnterEvent?) {
         elementsHandler.cleanView(this)
@@ -81,16 +88,25 @@ open class VaadinActuator<T: Any>(private var page: Page<T>): Div(), BeforeEnter
         elementsHandler.addToParent(this, vaadinComponentForUi(page.uiView))
     }
 
+    fun mainPageComponentForUI(): Component = vaadinComponentForUi(page.uiView)
+
     private fun vaadinComponentForUi(it: UIComponent): Component = uiComponentToVaadinComponent[it] ?: error("No Vaadin component found for uiComponent defined")
 
-    private fun linkDomainToComponents() = page.fields().map { linkFieldToComponent(it) }
+    private fun linkDomainToComponents() = page.fields().forEach { linkFieldToComponent(it) }
 
     private fun linkFieldToComponent(fieldName: String) {
-        val componentForField = getComponentById(fieldName)
-        page.addFieldChangeObserver(fieldName) { fieldValue -> elementsHandler.setValue(fieldValue, componentForField) }
-        elementsHandler.addValueChangeListener(componentForField) { value ->
-            page.setFieldValue(fieldName, value)
-            activateRestrictionsOnComponents()
+        fun valueShouldBeSetOnComponent(component: Component) = page.getFieldValue(fieldName) != null && page.getFieldValue(fieldName) != elementsHandler.getValue(component)
+
+        if (isThereComponentById(fieldName)) {
+            val componentForField = getComponentById(fieldName)
+            page.addFieldChangeObserver(fieldName) { fieldValue -> elementsHandler.setValue(fieldValue, componentForField) }
+            elementsHandler.addValueChangeListener(componentForField) { value ->
+                page.setFieldValue(fieldName, value)
+                activateRestrictionsOnComponents()
+            }
+            if (valueShouldBeSetOnComponent(componentForField)) {
+                elementsHandler.setValue(page.getFieldValue(fieldName), componentForField)
+            }
         }
     }
 
@@ -104,6 +120,8 @@ open class VaadinActuator<T: Any>(private var page: Page<T>): Div(), BeforeEnter
             }
         }
     }
+
+    private fun isThereComponentById(fieldName: String): Boolean = uiComponentToVaadinComponent.keys.any { it.id == fieldName}
 
     fun getComponentById(fieldName: String): Component = vaadinComponentForUi(uiComponentToVaadinComponent.keys.first { it.id == fieldName })
 
@@ -159,6 +177,10 @@ open class VaadinActuator<T: Any>(private var page: Page<T>): Div(), BeforeEnter
         return { refreshAfter(it) }
     }
 
+    fun refresh(componentId: String) {
+        elementsHandler.refresh(getComponentById(componentId))
+    }
+
     private fun applyNewDomainOnPage(dataClass: Any) {
         dataClass.javaClass.declaredFields.forEach { declaredField ->
             declaredField.isAccessible = true
@@ -172,6 +194,15 @@ open class VaadinActuator<T: Any>(private var page: Page<T>): Div(), BeforeEnter
     private fun activateDataProvidersOnComponents() {
         page.pageController.dataProviders.forEach { dataProvider ->
             elementsHandler.addDataProviderTo(getUIComponentById(dataProvider.forComponentId), getComponentById(dataProvider.forComponentId), dataProvider.dataProvider)
+        }
+    }
+
+    companion object {
+        fun showInUI(uiComponent: UIComponent) {
+            when (uiComponent) {
+                is ModalWindow<*> -> elementsHandler.showModalWindow(uiComponent)
+                is UserMessage -> elementsHandler.showUserMessage(uiComponent)
+            }
         }
     }
 
