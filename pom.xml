@@ -1,58 +1,58 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.soldo.business</groupId>
         <artifactId>spring-boot-parent</artifactId>
         <version>1.0.0-SNAPSHOT</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-	<groupId>com.octopus</groupId>
-	<artifactId>eternalUi</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<name>eternalUi</name>
-	<description>Eternal UI Framework</description>
+    <groupId>com.octopus</groupId>
+    <artifactId>eternalUi</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>eternalUi</name>
+    <description>Eternal UI Framework</description>
     <packaging>jar</packaging>
 
-	<properties>
+    <properties>
         <!-- Frontend -->
         <node.version>v8.16.0</node.version>
         <yarn.version>v1.16.0</yarn.version>
-		<vaadin.version>14.0.8</vaadin.version>
+        <vaadin.version>14.0.8</vaadin.version>
         <maven.resources.plugin.version>3.0.2</maven.resources.plugin.version>
         <maven.surefire.plugin.version>2.21.0</maven.surefire.plugin.version>
         <frontend.maven.plugin.version>1.6</frontend.maven.plugin.version>
     </properties>
 
-	<dependencies>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-jpa</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.vaadin</groupId>
-			<artifactId>vaadin-spring-boot-starter</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.jetbrains.kotlin</groupId>
-			<artifactId>kotlin-reflect</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.jetbrains.kotlin</groupId>
-			<artifactId>kotlin-stdlib-jdk8</artifactId>
-		</dependency>
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-spring-boot-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-reflect</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib-jdk8</artifactId>
+        </dependency>
 
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-test</artifactId>
-			<scope>test</scope>
-		</dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
 
         <!-- Database -->
 
@@ -62,19 +62,19 @@
             <version>2.4.0</version>
             <scope>runtime</scope>
         </dependency>
-	</dependencies>
+    </dependencies>
 
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>com.vaadin</groupId>
-				<artifactId>vaadin-bom</artifactId>
-				<version>${vaadin.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.vaadin</groupId>
+                <artifactId>vaadin-bom</artifactId>
+                <version>${vaadin.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <profiles>
         <profile>
@@ -86,11 +86,38 @@
                 </dependency>
             </dependencies>
         </profile>
+        <profile>
+            <id>run</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.jetbrains.kotlin</groupId>
+                        <artifactId>kotlin-maven-plugin</artifactId>
+                    </plugin>
+                </plugins>
+            </build>
+            <distributionManagement>
+                <repository>
+                    <id>soldo-nexus</id>
+                    <name>Internal Releases</name>
+                    <url>http://px-dev-tools.px.iefcloud.com:8081/repository/prod-releases/</url>
+                </repository>
+                <snapshotRepository>
+                    <id>soldo-nexus</id>
+                    <name>Internal Snapshot</name>
+                    <url>http://px-dev-tools.px.iefcloud.com:8081/repository/prod-snapshots/</url>
+                </snapshotRepository>
+            </distributionManagement>
+        </profile>
     </profiles>
-	<build>
+    <build>
         <finalName>eternal-ui</finalName>
-		<sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>
-		<testSourceDirectory>${project.basedir}/src/test/kotlin</testSourceDirectory>
+        <sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>
+        <testSourceDirectory>${project.basedir}/src/test/kotlin</testSourceDirectory>
         <pluginManagement>
             <plugins>
                 <plugin>
@@ -124,16 +151,6 @@
                 </plugin>
             </plugins>
         </pluginManagement>
-        <plugins>
-<!--            <plugin>-->
-<!--                <groupId>org.apache.maven.plugins</groupId>-->
-<!--                <artifactId>maven-compiler-plugin</artifactId>-->
-<!--            </plugin>-->
-<!--            <plugin>-->
-<!--                <groupId>org.jetbrains.kotlin</groupId>-->
-<!--                <artifactId>kotlin-maven-plugin</artifactId>-->
-<!--            </plugin>-->
-		</plugins>
-	</build>
+    </build>
 
 </project>
