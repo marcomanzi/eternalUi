@@ -88,6 +88,7 @@
         </profile>
     </profiles>
 	<build>
+        <finalName>eternal-ui</finalName>
 		<sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>
 		<testSourceDirectory>${project.basedir}/src/test/kotlin</testSourceDirectory>
         <pluginManagement>
@@ -124,64 +125,14 @@
             </plugins>
         </pluginManagement>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.jetbrains.kotlin</groupId>
-                <artifactId>kotlin-maven-plugin</artifactId>
-            </plugin>
-<!--			<plugin>-->
-<!--				<groupId>org.springframework.boot</groupId>-->
-<!--				<artifactId>spring-boot-maven-plugin</artifactId>-->
-<!--                <executions>-->
-<!--                    <execution>-->
-<!--                        <goals>-->
-<!--                            <goal>repackage</goal>-->
-<!--                        </goals>-->
-<!--                        <configuration>-->
-<!--                            <classifier>exec</classifier>-->
-<!--                        </configuration>-->
-<!--                    </execution>-->
-<!--                </executions>-->
+<!--            <plugin>-->
+<!--                <groupId>org.apache.maven.plugins</groupId>-->
+<!--                <artifactId>maven-compiler-plugin</artifactId>-->
 <!--            </plugin>-->
 <!--            <plugin>-->
-<!--                <groupId>com.vaadin</groupId>-->
-<!--                <artifactId>vaadin-maven-plugin</artifactId>-->
-<!--                <executions>-->
-<!--                    <execution>-->
-<!--                        <goals>-->
-<!--                            <goal>prepare-frontend</goal>-->
-<!--                        </goals>-->
-<!--                    </execution>-->
-<!--                </executions>-->
+<!--                <groupId>org.jetbrains.kotlin</groupId>-->
+<!--                <artifactId>kotlin-maven-plugin</artifactId>-->
 <!--            </plugin>-->
-<!--            <plugin>-->
-<!--				<groupId>org.jetbrains.kotlin</groupId>-->
-<!--				<artifactId>kotlin-maven-plugin</artifactId>-->
-<!--				<configuration>-->
-<!--					<compilerPlugins>-->
-<!--						<plugin>jpa</plugin>-->
-<!--						<plugin>spring</plugin>-->
-<!--					</compilerPlugins>-->
-<!--					<args>-->
-<!--						<arg>-Xjsr305=strict</arg>-->
-<!--					</args>-->
-<!--				</configuration>-->
-<!--				<dependencies>-->
-<!--					<dependency>-->
-<!--						<groupId>org.jetbrains.kotlin</groupId>-->
-<!--						<artifactId>kotlin-maven-noarg</artifactId>-->
-<!--						<version>${kotlin.version}</version>-->
-<!--					</dependency>-->
-<!--					<dependency>-->
-<!--						<groupId>org.jetbrains.kotlin</groupId>-->
-<!--						<artifactId>kotlin-maven-allopen</artifactId>-->
-<!--						<version>${kotlin.version}</version>-->
-<!--					</dependency>-->
-<!--				</dependencies>-->
-<!--			</plugin>-->
 		</plugins>
 	</build>
 
