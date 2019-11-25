@@ -15,6 +15,8 @@ import com.vaadin.flow.spring.annotation.UIScope
 import com.vaadin.flow.theme.Theme
 import com.vaadin.flow.theme.lumo.Lumo
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.core.io.FileSystemResource
+import org.springframework.core.io.Resource
 import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
 
@@ -33,7 +35,7 @@ class Home(@Autowired var homeController: HomeController): Page<HomeDomain>(
                 Grid("usersGrid", User::class, listOf("name", "address")),
                 HorizontalContainer("userFormLine1", Input("name", Text), Input("surname", Text), Input("surname2", Text), Input("age", Text)),
                 HorizontalContainer("userFormLine2", Input("vatNumber", Text), Input("city", Text), Input("country", Text)),
-                HorizontalContainer("actions", Button("Save"), Button("save1000Users", caption = "Save  1000 Users"))),
+                HorizontalContainer("actions", Button("Save"), Button("save1000Users", caption = "Save 1000 Users"), DownloadButton("downloadFile", caption = "Download File"))),
         homeController,
         PageDomain(HomeDomain()))
 
@@ -43,14 +45,15 @@ class UserSearchForm: HorizontalContainer("searchForm", Input("searchName", Text
 class HomeController(@Autowired var homeBackend: HomeBackend): PageController<HomeDomain>(
         actions = listOf(OnClickAction("Save") { homeBackend.saveUser(it) },
                 OnClickReader("save1000Users") { it.apply { homeBackend.save1000Users() }},
-                OnClickAction("usersGrid") { homeBackend.showUserForm(it)} ),
+                OnClickAction("usersGrid") { homeBackend.showUserForm(it)},
+                OnClickAction("downloadFile") { homeBackend.downloadFile(it)}),
         enabledRules = listOf(EnabledRule("Save") { page -> page.hasValues("name")}),
         dataProviders = listOf(DataProvider("usersGrid", homeBackend.userDataProvider,
                 OrRule(WasInteractedWith("Save"), WasInteractedWith("save1000Users")) ,
                 "searchName"))
 )
 
-data class HomeDomain(val name: String = "", val surname: String = "", val country: String = "", val usersGrid: User? = null, val city: String = "")
+data class HomeDomain(val name: String = "", val surname: String = "", val country: String = "", val usersGrid: User? = null, val city: String = "", val downloadFile: Resource? = null)
 
 @Service
 class HomeBackend {
@@ -75,4 +78,9 @@ class HomeBackend {
         }
         return homeDomain
     }
+
+    fun downloadFile(homeDomain: HomeDomain): HomeDomain {
+        return homeDomain.copy(downloadFile = FileSystemResource("/Users/mmanzi/workspace/soldo/hybrid-projects/eternalUi/HELP.md"))
+    }
+
 }
