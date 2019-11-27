@@ -39,7 +39,7 @@ class Vaadin14UiElementsHandler: VaadinElementsHandler {
             }
 
     override fun addCssClass(component: Component, uiComponent: UIComponent) {
-        (component as HasStyle).addClassName(uiComponent.javaClass.simpleName)
+        if (component is HasStyle) (component as HasStyle).addClassName(uiComponent.javaClass.simpleName)
     }
 
     override fun addCssClass(component: Component, cssClassName: String) {

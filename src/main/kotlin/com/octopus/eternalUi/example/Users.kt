@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
 
 @Route("users")
-@Theme(Lumo::class)
 @UIScope
 @JsModule("./example-style.js")
 class UsersView(@Autowired var home: UserPage): EternalUI<EmptyDomain>(home)

@@ -2,6 +2,7 @@ package com.octopus.eternalUi.example.domain
 
 import com.octopus.eternalUi.domain.db.AbstractDataProvider
 import com.octopus.eternalUi.domain.db.Page
+import org.springframework.beans.BeanUtils
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor
@@ -17,12 +18,15 @@ import javax.persistence.criteria.Root
 interface UserRepository: JpaSpecificationExecutor<User>, JpaRepository<User, UUID>
 
 @Component
-class UserDataProvider(val userRepository: UserRepository): AbstractDataProvider<User>() {
+class UserDataProvider(private val userRepository: UserRepository): AbstractDataProvider<UserUI>() {
 
-    override fun find(id: String?): User = userRepository.findById(UUID.fromString(id!!)).get()
+    private fun toUI(user: User): UserUI = UserUI().apply { BeanUtils.copyProperties(user, this) }
 
-    override fun page(page: Page?, filters: MutableMap<String, String>?): MutableList<User> {
+    override fun find(id: String?): UserUI = toUI(userRepository.findById(UUID.fromString(id!!)).get())
+
+    override fun page(page: Page?, filters: MutableMap<String, String>?): MutableList<UserUI> {
         return userRepository.findAll(specificationFromFilters(filters), PageRequest.of(page!!.page, page.size)).content
+                .map { toUI(it) }.toMutableList()
     }
 
     private fun specificationFromFilters(filters: MutableMap<String, String>?): (Root<User>, CriteriaQuery<*>, CriteriaBuilder) -> Predicate =

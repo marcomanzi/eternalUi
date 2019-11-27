@@ -1,20 +1,18 @@
 package com.octopus.eternalUi.example.domain
 
-import com.octopus.eternalUi.domain.db.Identifiable
 import java.util.*
 import javax.persistence.*
 
 @Entity
-data class User(
+open class User(
         @Id val id: UUID = UUID.randomUUID(),
-        var name: String,
+        var name: String = "",
         @OneToOne(cascade = [(CascadeType.ALL)], orphanRemoval = true, fetch = FetchType.EAGER)
         val address: Address = Address()
-) : AbstractJpaPersistable(), Identifiable
-
+) : AbstractJpaPersistable()
 
 @Entity
-data class Address(
+class Address(
         var street: String = "",
         var zipCode: String = "",
         var city: String = ""

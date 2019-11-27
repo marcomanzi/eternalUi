@@ -35,7 +35,7 @@ public class ListDataProvider<T extends Identifiable> extends AbstractDataProvid
 
     @Override
     public T find(String id) {
-        return elements.stream().filter(e -> e.getId().equals(id)).findFirst().get();
+        return elements.stream().filter(e -> e.getUiId().equals(id)).findFirst().get();
     }
 
     @Override

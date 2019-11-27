@@ -113,11 +113,16 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
     private fun linkDataProviderFiltersToComponents() = page.pageController.dataProviders.forEach { it.filterIds.forEach { filterId -> linkFieldToFilters(filterId) } }
 
     private fun linkFieldToFilters(fieldName: String) {
-        elementsHandler.addValueChangeListener(getComponentById(fieldName)) { value ->
-            page.pageController.dataProviders.forEach {
-                it.applyFilterValueToDataProvider(fieldName, value)
-                elementsHandler.refresh(getComponentById(it.forComponentId))
+        try {
+            val componentById = getComponentById(fieldName)
+            elementsHandler.addValueChangeListener(componentById) { value ->
+                page.pageController.dataProviders.forEach {
+                    it.applyFilterValueToDataProvider(fieldName, value)
+                    elementsHandler.refresh(getComponentById(it.forComponentId))
+                }
             }
+        } catch (e: NoSuchElementException) {
+            throw RuntimeException("No Element found for $fieldName", e)
         }
     }
 
