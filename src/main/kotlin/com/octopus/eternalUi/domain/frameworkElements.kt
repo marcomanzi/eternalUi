@@ -21,8 +21,9 @@ open class PageController<T: Any>(val actions: List<Action<T>> = listOf(),
 
 open class PageDomain<T: Any>(val dataClass: T):UIDomain
 
-open class DataProvider<T: Identifiable>(val forComponentId: String, val dataProvider: com.octopus.eternalUi.domain.db.DataProvider<T>, val refreshRule: Rule<T> = NoRule(), vararg val filterIds: String) {
-    fun applyFilterValueToDataProvider(filtedId: String, filterValue: Any) {
-        if (filterValue is String) dataProvider.addFilter(filtedId, filterValue)
+open class DataProvider<T: Identifiable>(val forComponentId: String, val dataProvider: com.octopus.eternalUi.domain.db.DataProvider<T>,
+                                         val refreshRule: Rule<T> = NoRule(), vararg val filterIds: String) {
+    fun applyFilterValueToDataProvider(filterId: String, filterValue: Any) {
+        if (filterValue is String) dataProvider.addFilter(filterId, filterValue)
     }
 }

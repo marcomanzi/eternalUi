@@ -88,6 +88,14 @@
                     <version>2.1.0</version>
                     <scope>provided</scope>
                 </dependency>
+                <dependency>
+                    <groupId>com.vaadin</groupId>
+                    <artifactId>vaadin-combo-box-flow</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>com.vaadin</groupId>
+                    <artifactId>vaadin-select-flow</artifactId>
+                </dependency>
             </dependencies>
             <build>
                 <plugins>

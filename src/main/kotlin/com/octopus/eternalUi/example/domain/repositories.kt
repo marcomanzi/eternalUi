@@ -1,6 +1,7 @@
 package com.octopus.eternalUi.example.domain
 
 import com.octopus.eternalUi.domain.db.AbstractDataProvider
+import com.octopus.eternalUi.domain.db.Message
 import com.octopus.eternalUi.domain.db.Page
 import org.springframework.beans.BeanUtils
 import org.springframework.data.domain.PageRequest
@@ -37,4 +38,12 @@ class UserDataProvider(private val userRepository: UserRepository): AbstractData
             }
 
     override fun count(filters: MutableMap<String, String>?): Int = userRepository.count(specificationFromFilters(filters)).toInt()
+}
+
+@Component
+class CityDataProvider(): AbstractDataProvider<Message>() {
+    val cities = listOf("Rome", "Milan").map { Message(it) }
+    override fun count(filters: MutableMap<String, String>?): Int = cities.size
+    override fun page(page: Page?, filters: MutableMap<String, String>?): MutableList<Message> = cities.toMutableList()
+    override fun find(id: String?): Message = cities.first { it.message == id }
 }

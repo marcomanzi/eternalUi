@@ -3,6 +3,9 @@ package com.octopus.eternalUi.vaadinBridge
 import com.octopus.eternalUi.domain.*
 import com.octopus.eternalUi.domain.db.Identifiable
 import com.vaadin.flow.component.Component
+import com.vaadin.flow.component.HasComponents
+import com.vaadin.flow.component.HasElement
+import com.vaadin.flow.component.combobox.ComboBox
 import com.vaadin.flow.component.html.Div
 import com.vaadin.flow.router.BeforeEnterEvent
 import com.vaadin.flow.router.BeforeEnterObserver
@@ -64,6 +67,7 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
 
     private fun addDebugButton() {
         if (debugModeActive) elementsHandler.addToParent(vaadinComponentForUi(page.uiView), elementsHandler.debugButton { page.toDebugString() })
+        (getComponentById(page.uiView.id) as HasComponents).add(ComboBox<String>("Test").apply { setItems("1", "2") })
     }
 
     private fun createMapUIComponentToVaadinComponent(uiComponent: UIComponent): Map<UIComponent, Component> {

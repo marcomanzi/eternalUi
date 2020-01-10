@@ -19,8 +19,8 @@ class UsersView(@Autowired var home: UserPage): EternalUI<EmptyDomain>(home)
 @Component
 class UserPage(@Autowired var userController: UserController): Page<EmptyDomain>(
         VerticalContainer("userContainer",
-                Label("Welcome to the User Page", "h1"),
-                InsideAppLink("home", HomeView::class.java)),
+                Label("Welcome to the User Page", "h1")),
+//                InsideAppLink("home", HomeView::class.java)),
         userController)
 
 

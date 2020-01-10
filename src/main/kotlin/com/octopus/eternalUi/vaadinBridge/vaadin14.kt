@@ -3,15 +3,19 @@ package com.octopus.eternalUi.vaadinBridge
 import com.octopus.eternalUi.domain.*
 import com.octopus.eternalUi.domain.db.DataProviderWrapper
 import com.octopus.eternalUi.domain.db.Identifiable
+import com.octopus.eternalUi.domain.db.Message
 import com.vaadin.flow.component.*
+import com.vaadin.flow.component.combobox.ComboBox
 import com.vaadin.flow.component.dialog.Dialog
 import com.vaadin.flow.component.html.Div
 import com.vaadin.flow.component.html.Label
 import com.vaadin.flow.component.notification.Notification
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout
 import com.vaadin.flow.component.orderedlayout.VerticalLayout
+import com.vaadin.flow.component.select.Select
 import com.vaadin.flow.component.textfield.PasswordField
 import com.vaadin.flow.component.textfield.TextField
+import com.vaadin.flow.data.provider.DataProvider
 import com.vaadin.flow.data.value.ValueChangeMode
 import com.vaadin.flow.router.RouterLink
 import java.util.*
@@ -56,6 +60,9 @@ class Vaadin14UiElementsHandler: VaadinElementsHandler {
             when(input.type) {
                 InputType.Text -> TextField(UtilsUI.captionFromId(input.caption)).apply { valueChangeMode = ValueChangeMode.EAGER }
                 InputType.Password -> PasswordField(UtilsUI.captionFromId(input.caption)).apply { valueChangeMode = ValueChangeMode.EAGER }
+                InputType.Select -> ComboBox<Message>(UtilsUI.captionFromId(input.caption)).apply {
+                    isClearButtonVisible = true
+                }
             }
 
     override fun cleanView(component: Component) {
@@ -66,6 +73,7 @@ class Vaadin14UiElementsHandler: VaadinElementsHandler {
         when(componentById) {
             is TextField -> componentById.value = fieldValue.toString()
             is PasswordField -> componentById.value = fieldValue.toString()
+            is ComboBox<*> -> if (fieldValue != null && fieldValue.toString() != "") componentById.value = Message(fieldValue.toString())
             is com.vaadin.flow.component.grid.Grid<*> ->
                 if (fieldValue == null) componentById.deselectAll()
                 else if (fieldValue is Optional<*> && fieldValue.isPresent) {
@@ -78,6 +86,7 @@ class Vaadin14UiElementsHandler: VaadinElementsHandler {
             when(componentById) {
                 is TextField -> componentById.value
                 is PasswordField -> componentById.value
+                is ComboBox<*> -> componentById.value
                 is com.vaadin.flow.component.grid.Grid<*> -> if (componentById.selectedItems.isNotEmpty()) componentById.selectedItems.first() else null
                 else -> null
             }
@@ -87,6 +96,7 @@ class Vaadin14UiElementsHandler: VaadinElementsHandler {
         when(component) {
             is TextField -> component.addValueChangeListener { listener.invoke(it.value) }
             is PasswordField -> component.addValueChangeListener { listener.invoke(it.value) }
+            is ComboBox<*> -> component.addValueChangeListener { listener.invoke((it.value?:"").toString()) }
             is com.vaadin.flow.component.grid.Grid<*> -> component.addSelectionListener { listener.invoke(it.firstSelectedItem) }
         }
     }
@@ -95,6 +105,7 @@ class Vaadin14UiElementsHandler: VaadinElementsHandler {
         when(component) {
             is TextField -> component.addValueChangeListener { listener.invoke(it.value) }
             is PasswordField -> component.addValueChangeListener { listener.invoke(it.value) }
+            is ComboBox<*> -> component.addValueChangeListener { listener.invoke(it.value) }
             is com.vaadin.flow.component.grid.Grid<*> -> component.addSelectionListener { listener.invoke(it.firstSelectedItem) }
         }
     }
@@ -112,8 +123,13 @@ class Vaadin14UiElementsHandler: VaadinElementsHandler {
 
     override fun addDataProviderTo(uiComponent: UIComponent, component: Component, dataProvider: com.octopus.eternalUi.domain.db.DataProvider<out Identifiable>) {
         when(component) {
+            is ComboBox<*> -> addDataProviderToSelect(component as ComboBox<Identifiable>, dataProvider)
             is com.vaadin.flow.component.grid.Grid<*> -> addDataProviderToGrid(component as com.vaadin.flow.component.grid.Grid<Identifiable>, dataProvider)
         }
+    }
+
+    private fun addDataProviderToSelect(select: ComboBox<Identifiable>, dataProvider: com.octopus.eternalUi.domain.db.DataProvider<out Identifiable>) {
+        select.setItems(Message("Rome"), Message("Milan"))
     }
 
     private fun addDataProviderToGrid(grid: com.vaadin.flow.component.grid.Grid<out Identifiable>, dataProvider: com.octopus.eternalUi.domain.db.DataProvider<out Identifiable>) {
@@ -122,6 +138,7 @@ class Vaadin14UiElementsHandler: VaadinElementsHandler {
 
     override fun refresh(component: Component) {
         when (component) {
+            is ComboBox<*> -> component.dataProvider.refreshAll()
             is com.vaadin.flow.component.grid.Grid<*> -> component.dataProvider.refreshAll()
         }
     }
@@ -130,6 +147,7 @@ class Vaadin14UiElementsHandler: VaadinElementsHandler {
         Dialog().apply {
             add(EternalUI(modalWindow.page).prepareUI().mainPageComponentForUI())
             addDialogCloseActionListener { modalWindow.onClose(modalWindow.page.pageDomain.dataClass) }
+            isCloseOnEsc = true
         }.open()
     }
 
