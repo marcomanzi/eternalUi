@@ -12,10 +12,8 @@ import com.vaadin.flow.component.html.Label
 import com.vaadin.flow.component.notification.Notification
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout
 import com.vaadin.flow.component.orderedlayout.VerticalLayout
-import com.vaadin.flow.component.select.Select
 import com.vaadin.flow.component.textfield.PasswordField
 import com.vaadin.flow.component.textfield.TextField
-import com.vaadin.flow.data.provider.DataProvider
 import com.vaadin.flow.data.value.ValueChangeMode
 import com.vaadin.flow.router.RouterLink
 import java.util.*
@@ -129,7 +127,7 @@ class Vaadin14UiElementsHandler: VaadinElementsHandler {
     }
 
     private fun addDataProviderToSelect(select: ComboBox<Identifiable>, dataProvider: com.octopus.eternalUi.domain.db.DataProvider<out Identifiable>) {
-        select.setItems(Message("Rome"), Message("Milan"))
+        select.setDataProvider(DataProviderWrapper<Identifiable>(dataProvider))
     }
 
     private fun addDataProviderToGrid(grid: com.vaadin.flow.component.grid.Grid<out Identifiable>, dataProvider: com.octopus.eternalUi.domain.db.DataProvider<out Identifiable>) {
