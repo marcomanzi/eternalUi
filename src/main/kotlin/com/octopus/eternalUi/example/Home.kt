@@ -24,15 +24,6 @@ import org.springframework.stereotype.Service
 
 @Route("")
 @UIScope
-//class TestView: Div(), BeforeEnterObserver {
-//    override fun beforeEnter(event: BeforeEnterEvent?) {
-//        Dialog().apply {
-//            add(ComboBox<String>("Test").apply { setItems("1", "2", "3") })
-//            add(com.vaadin.flow.component.select.Select<String>("Test").apply { setItems("1", "2", "3") })
-//        }.open()
-//    }
-//
-//}
 @JsModule("./example-style.js")
 class HomeView(@Autowired var home: Home): EternalUI<HomeDomain>(home)
 
@@ -41,6 +32,7 @@ class HomeView(@Autowired var home: Home): EternalUI<HomeDomain>(home)
 class Home(@Autowired var homeController: HomeController): Page<HomeDomain>(
         VerticalContainer("homeContainer",
                 InsideAppLink("users", UsersView::class.java),
+                InsideAppLink("exampleUI", ExampleFormView::class.java),
                 Label("User Search", "h1"),
                 UserSearchForm(),
                 Grid("usersGrid", UserUI::class, listOf("name", "address")),

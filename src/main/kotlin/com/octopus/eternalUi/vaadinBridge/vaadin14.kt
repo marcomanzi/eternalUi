@@ -141,14 +141,20 @@ class Vaadin14UiElementsHandler: VaadinElementsHandler {
         }
     }
 
+    private val dialogKeyInSession = "LAST_OPENED_DIALOG"
     override fun <T: Any> showModalWindow(modalWindow: ModalWindow<T>) {
         Dialog().apply {
             add(EternalUI(modalWindow.page).prepareUI().mainPageComponentForUI())
             addDialogCloseActionListener { modalWindow.onClose(modalWindow.page.pageDomain.dataClass) }
-            isCloseOnEsc = true
+            UI.getCurrent().session.setAttribute(dialogKeyInSession, this)
         }.open()
     }
 
+    override fun closeTopModalWindow() {
+        if (UI.getCurrent().session.getAttribute(dialogKeyInSession) != null) {
+            (UI.getCurrent().session.getAttribute(dialogKeyInSession) as Dialog).close()
+        }
+    }
 
     override fun showUserMessage(userMessage: UserMessage) {
         Notification(userMessage.message).apply {

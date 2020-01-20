@@ -5,6 +5,19 @@ $_documentContainer.innerHTML = `<custom-style>
         .Label.h1 {
             font-size: 2em !important;
         }
+        
+        .Label.h2 {
+            font-size: 1.8em !important;
+        }
+        
+        .Label.h3 {
+            font-size: 1.6em !important;
+        }
+        
+        .Label.sectionTitle {
+            font-size: 1.4em !important;
+            font-weight: bold;
+        }
     </style> 
  </custom-style>`;
 

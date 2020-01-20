@@ -27,6 +27,7 @@ interface VaadinElementsHandler {
     fun addCssClass(component: Component, cssClassName: String)
     fun <T: Any> showModalWindow(modalWindow: ModalWindow<T>)
     fun showUserMessage(userMessage: UserMessage)
+    fun closeTopModalWindow()
 }
 
 val elementsHandler = Vaadin14UiElementsHandler()
@@ -208,6 +209,10 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
                 is ModalWindow<*> -> elementsHandler.showModalWindow(uiComponent)
                 is UserMessage -> elementsHandler.showUserMessage(uiComponent)
             }
+        }
+
+        fun closeTopModalWindow() {
+            elementsHandler.closeTopModalWindow()
         }
     }
 
