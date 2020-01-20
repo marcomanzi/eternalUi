@@ -6,16 +6,20 @@ import com.octopus.eternalUi.domain.db.Identifiable
 import com.octopus.eternalUi.domain.db.Message
 import com.vaadin.flow.component.*
 import com.vaadin.flow.component.combobox.ComboBox
+import com.vaadin.flow.component.datepicker.DatePicker
 import com.vaadin.flow.component.dialog.Dialog
 import com.vaadin.flow.component.html.Div
 import com.vaadin.flow.component.html.Label
+import com.vaadin.flow.component.icon.Icon
+import com.vaadin.flow.component.icon.VaadinIcon
 import com.vaadin.flow.component.notification.Notification
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout
 import com.vaadin.flow.component.orderedlayout.VerticalLayout
-import com.vaadin.flow.component.textfield.PasswordField
-import com.vaadin.flow.component.textfield.TextField
+import com.vaadin.flow.component.textfield.*
 import com.vaadin.flow.data.value.ValueChangeMode
 import com.vaadin.flow.router.RouterLink
+import java.math.BigDecimal
+import java.time.LocalDate
 import java.util.*
 
 @Suppress("UNCHECKED_CAST")
@@ -34,6 +38,7 @@ class Vaadin14UiElementsHandler: VaadinElementsHandler {
                 is HorizontalContainer -> HorizontalLayout().apply { isMargin = false; setSizeFull() }
                 is com.octopus.eternalUi.domain.Label -> Label(uiComponent.caption)
                 is Input -> createFor(uiComponent)
+                is InputNumber -> createFor(uiComponent)
                 is Button -> com.vaadin.flow.component.button.Button(uiComponent.caption)
                 is Grid -> com.vaadin.flow.component.grid.Grid(uiComponent.elementType.java).apply { setupGrid(this, uiComponent.columns) }
                 is InsideAppLink -> RouterLink(uiComponent.caption, uiComponent.uiViewClass)
@@ -61,7 +66,34 @@ class Vaadin14UiElementsHandler: VaadinElementsHandler {
                 InputType.Select -> ComboBox<Message>(UtilsUI.captionFromId(input.caption)).apply {
                     isClearButtonVisible = true
                 }
+                InputType.Date -> DatePicker(UtilsUI.captionFromId(input.caption))
             }
+
+    private fun createFor(input: InputNumber): Component {
+        return when(input.type) {
+            InputNumberType.Double -> NumberField(UtilsUI.captionFromId(input.caption)).apply {
+                valueChangeMode = ValueChangeMode.EAGER
+                input.min?.let { min = it.toDouble() }; input.max?.let { max = it.toDouble() }
+                input.step?.let {
+                    step = it.toDouble()
+                    setHasControls(true)
+                }
+            }
+            InputNumberType.Integer -> IntegerField(UtilsUI.captionFromId(input.caption)).apply {
+                valueChangeMode = ValueChangeMode.EAGER
+                input.min?.let { min = it.toInt() }; input.max?.let { max = it.toInt() }
+                input.step?.let {
+                    step = it.toInt()
+                    setHasControls(true)
+                }
+            }
+            InputNumberType.BigDecimal -> BigDecimalField(UtilsUI.captionFromId(input.caption)).apply { valueChangeMode = ValueChangeMode.EAGER }
+            InputNumberType.Currency -> BigDecimalField(UtilsUI.captionFromId(input.caption)).apply { valueChangeMode = ValueChangeMode.EAGER
+                addThemeVariants(TextFieldVariant.LUMO_ALIGN_RIGHT);
+                prefixComponent = Icon(VaadinIcon.EURO)
+            }
+        }
+    }
 
     override fun cleanView(component: Component) {
         component.apply { (this as HasComponents).removeAll() }
@@ -71,6 +103,10 @@ class Vaadin14UiElementsHandler: VaadinElementsHandler {
         when(componentById) {
             is TextField -> componentById.value = fieldValue.toString()
             is PasswordField -> componentById.value = fieldValue.toString()
+            is DatePicker -> componentById.value = fieldValue as LocalDate
+            is NumberField -> componentById.value = fieldValue as Double
+            is IntegerField -> componentById.value = fieldValue as Int
+            is BigDecimalField -> componentById.value = fieldValue as BigDecimal
             is ComboBox<*> -> if (fieldValue != null && fieldValue.toString() != "") componentById.value = Message(fieldValue.toString())
             is com.vaadin.flow.component.grid.Grid<*> ->
                 if (fieldValue == null) componentById.deselectAll()
@@ -82,29 +118,27 @@ class Vaadin14UiElementsHandler: VaadinElementsHandler {
 
     override fun getValue(componentById: Component): Any? =
             when(componentById) {
-                is TextField -> componentById.value
-                is PasswordField -> componentById.value
-                is ComboBox<*> -> componentById.value
+                is NumberField -> componentById.value?.toDouble()?:0.0
+                is IntegerField -> componentById.value?.toInt()?:0
+                is BigDecimalField -> componentById.value
                 is com.vaadin.flow.component.grid.Grid<*> -> if (componentById.selectedItems.isNotEmpty()) componentById.selectedItems.first() else null
-                else -> null
+                else -> (componentById as AbstractField<*, *>).getValue()
             }
-
 
     override fun addValueChangeListener(component: Component, listener: (Any) -> Unit) {
         when(component) {
-            is TextField -> component.addValueChangeListener { listener.invoke(it.value) }
-            is PasswordField -> component.addValueChangeListener { listener.invoke(it.value) }
             is ComboBox<*> -> component.addValueChangeListener { listener.invoke((it.value?:"").toString()) }
             is com.vaadin.flow.component.grid.Grid<*> -> component.addSelectionListener { listener.invoke(it.firstSelectedItem) }
+            else -> (component as AbstractField<*, *>).addValueChangeListener { field ->
+                field.value?.let { newValue -> listener.invoke(newValue) } }
         }
     }
 
     override fun addOnChangeAction(component: Component, listener: (Any) -> Unit) {
         when(component) {
-            is TextField -> component.addValueChangeListener { listener.invoke(it.value) }
-            is PasswordField -> component.addValueChangeListener { listener.invoke(it.value) }
             is ComboBox<*> -> component.addValueChangeListener { listener.invoke(it.value) }
             is com.vaadin.flow.component.grid.Grid<*> -> component.addSelectionListener { listener.invoke(it.firstSelectedItem) }
+            else -> (component as AbstractField<*, *>).addValueChangeListener { listener.invoke(it.value) }
         }
     }
 

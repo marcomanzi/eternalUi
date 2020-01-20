@@ -20,13 +20,15 @@ class ExampleForm(@Autowired var exampleFormController: ExampleFormController): 
         VerticalContainer("exampleFormContainer",
                 Label("Example Eternal UI Application", "h1"),
                 Label("A simple UI with a grid, and a CRUD on the grid entity", "h3"),
-                Button("openDialog", caption = "Example Button that open a dialog")),
+                Button("openDialog", caption = "Example Button that open a dialog"),
+                Button("openDialogWithValues", caption = "Example Button that open a dialog With starting values")),
         exampleFormController,
         PageDomain(ExampleFormDomain()))
 
 @Service
 class ExampleFormController(@Autowired var exampleFormBackend: ExampleFormBackend): PageController<ExampleFormDomain>(
-        actions = listOf(OnClickAction("openDialog") { exampleFormBackend.openDialog(it) }))
+        actions = listOf(OnClickAction("openDialog") { exampleFormBackend.openDialog(it) },
+                OnClickAction("openDialogWithValues") { exampleFormBackend.openDialogWithValues(it) }))
 
 data class ExampleFormDomain(val name: String = "")
 
@@ -36,5 +38,9 @@ class ExampleFormBackend {
 
     fun openDialog(exampleFormDomain: ExampleFormDomain) = exampleFormDomain.apply {
         EternalUI.showInUI(ModalWindow("modalExample1", entityFormOnlyForEntity))
+    }
+
+    fun openDialogWithValues(exampleFormDomain: ExampleFormDomain) = exampleFormDomain.apply {
+        EternalUI.showInUI(ModalWindow("modalExample2", entityFormOnlyForEntity.withEntity(ExampleFormOnlyForEntityDomain("Test Start Name"))))
     }
 }
