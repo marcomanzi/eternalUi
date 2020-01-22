@@ -14,6 +14,7 @@ class ExampleFormOnlyForEntity(@Autowired var exampleFormOnlyForEntityController
                 HorizontalContainer("firstLine", Input("name", InputType.Text), Input("surname", InputType.Text)),
                 HorizontalContainer("secondLine", InputNumber("age", InputNumberType.Integer, min = 0, max = 100), Input("birthDate", InputType.Date)),
                 HorizontalContainer("thirdLine", InputNumber("pocketAmount", InputNumberType.Currency), InputNumber("conversionRate", step = 2)),
+                HorizontalContainer("forthLine", Input("description", InputType.TextArea)),
                 Button("saveExampleForm", caption = "Example Save And Close Dialog")),
         exampleFormOnlyForEntityController,
         PageDomain(ExampleFormOnlyForEntityDomain())) {
@@ -26,7 +27,7 @@ class ExampleFormOnlyForEntity(@Autowired var exampleFormOnlyForEntityController
 class ExampleFormOnlyForEntityController(@Autowired var exampleFormOnlyForEntityBackend: ExampleFormOnlyForEntityBackend): PageController<ExampleFormOnlyForEntityDomain>(
         actions = listOf(OnClickAction("saveExampleForm") { exampleFormOnlyForEntityBackend.saveAndCloseDialog(it) }))
 
-data class ExampleFormOnlyForEntityDomain(val name: String = "", val surname: String = "", val age: Int = 18, val birthDate: LocalDate = LocalDate.now().minusYears(18) )
+data class ExampleFormOnlyForEntityDomain(val name: String = "", val surname: String = "", val age: Int = 18, val birthDate: LocalDate = LocalDate.now().minusYears(18), val description: String = "")
 
 @Service
 class ExampleFormOnlyForEntityBackend {

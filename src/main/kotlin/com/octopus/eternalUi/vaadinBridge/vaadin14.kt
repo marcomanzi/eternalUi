@@ -62,6 +62,7 @@ class Vaadin14UiElementsHandler: VaadinElementsHandler {
     private fun createFor(input: Input): Component =
             when(input.type) {
                 InputType.Text -> TextField(UtilsUI.captionFromId(input.caption)).apply { valueChangeMode = ValueChangeMode.EAGER }
+                InputType.TextArea -> TextArea(UtilsUI.captionFromId(input.caption)).apply { valueChangeMode = ValueChangeMode.EAGER }
                 InputType.Password -> PasswordField(UtilsUI.captionFromId(input.caption)).apply { valueChangeMode = ValueChangeMode.EAGER }
                 InputType.Select -> ComboBox<Message>(UtilsUI.captionFromId(input.caption)).apply {
                     isClearButtonVisible = true
@@ -177,18 +178,22 @@ class Vaadin14UiElementsHandler: VaadinElementsHandler {
 
     private val dialogKeyInSession = "LAST_OPENED_DIALOG"
     override fun <T: Any> showModalWindow(modalWindow: ModalWindow<T>) {
-        Dialog().apply {
-            val mainPageComponentForUI = EternalUI(modalWindow.page).prepareUI().mainPageComponentForUI()
-            addCssClass(mainPageComponentForUI, modalWindow.cssClassName)
-            add(mainPageComponentForUI)
-            addDialogCloseActionListener { modalWindow.onClose(modalWindow.page.pageDomain.dataClass) }
-            UI.getCurrent().session.setAttribute(dialogKeyInSession, this)
-        }.open()
+        if (UI.getCurrent().session.getAttribute(dialogKeyInSession) == null) {
+            Dialog().apply {
+                val mainPageComponentForUI = EternalUI(modalWindow.page).prepareUI().mainPageComponentForUI()
+                addCssClass(mainPageComponentForUI, modalWindow.cssClassName)
+                add(mainPageComponentForUI)
+                addDialogCloseActionListener { modalWindow.onClose(modalWindow.page.pageDomain.dataClass) }
+                UI.getCurrent().session.setAttribute(dialogKeyInSession, this)
+                isCloseOnEsc = true
+            }.open()
+        }
     }
 
     override fun closeTopModalWindow() {
         if (UI.getCurrent().session.getAttribute(dialogKeyInSession) != null) {
             (UI.getCurrent().session.getAttribute(dialogKeyInSession) as Dialog).close()
+            UI.getCurrent().session.setAttribute(dialogKeyInSession, null)
         }
     }
 

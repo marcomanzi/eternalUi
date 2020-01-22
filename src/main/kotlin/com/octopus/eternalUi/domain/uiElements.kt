@@ -16,7 +16,7 @@ fun captionFrom(id: String): String = UtilsUI.captionFromId(id)
 
 data class Label(private val _id: String, private val _cssClassName: String = "", val caption: String = captionFrom(_id)): UIComponent(_id, _cssClassName)
 
-enum class InputType { Text, Password, Select, Date }
+enum class InputType { Text, TextArea, Password, Select, Date }
 data class Input(private val _id: String, val type: InputType = InputType.Text, private val _cssClassName: String = "", val caption: String = captionFrom(_id)): UIComponent(_id, _cssClassName)
 enum class InputNumberType { Double, Integer, BigDecimal, Currency }
 data class InputNumber(private val _id: String, val type: InputNumberType = InputNumberType.Double, private val _cssClassName: String = "", val caption: String = captionFrom(_id),
