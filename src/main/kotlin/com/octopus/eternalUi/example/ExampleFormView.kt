@@ -37,7 +37,7 @@ class ExampleFormBackend {
     @Autowired lateinit var entityFormOnlyForEntity: ExampleFormOnlyForEntity
 
     fun openDialog(exampleFormDomain: ExampleFormDomain) = exampleFormDomain.apply {
-        EternalUI.showInUI(ModalWindow("modalExample1", entityFormOnlyForEntity))
+        EternalUI.showInUI(ModalWindow("modalExample1", entityFormOnlyForEntity, _cssClassName = "exampleDialogCssClass"))
     }
 
     fun openDialogWithValues(exampleFormDomain: ExampleFormDomain) = exampleFormDomain.apply {

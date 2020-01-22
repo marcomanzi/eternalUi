@@ -7,7 +7,7 @@ interface UIDomain
 interface UIPresenter
 interface Rule<T: Any>
 
-abstract class UIComponent(val id: String, val cssClassName: String, val containedUIComponents : List<UIComponent> = listOf(), val metadata: Map<String, Any> = mapOf()) {
+abstract class UIComponent(val id: String, var cssClassName: String, val containedUIComponents : List<UIComponent> = listOf(), val metadata: Map<String, Any> = mapOf()) {
     var styleApplyer: ((EternalUI<*>) -> Unit)? = null
     fun getUIComponentById(id: String) = (containedUIComponents + this).first { it.id == id }
     fun setStyle(styleApplier: (EternalUI<*>) -> Unit) {

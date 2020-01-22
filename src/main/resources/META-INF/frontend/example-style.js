@@ -18,6 +18,9 @@ $_documentContainer.innerHTML = `<custom-style>
             font-size: 1.4em !important;
             font-weight: bold;
         }
+        .exampleDialogCssClass {
+            width: 90em !important;
+        }
     </style> 
  </custom-style>`;
 
