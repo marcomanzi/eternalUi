@@ -21,14 +21,16 @@ class ExampleForm(@Autowired var exampleFormController: ExampleFormController): 
                 Label("Example Eternal UI Application", "h1"),
                 Label("A simple UI with a grid, and a CRUD on the grid entity", "h3"),
                 Button("openDialog", caption = "Example Button that open a dialog"),
-                Button("openDialogWithValues", caption = "Example Button that open a dialog With starting values")),
+                Button("openDialogWithValues", caption = "Example Button that open a dialog With starting values"),
+                Button("navigateToHome", caption = "Example Button to navigate to Home")),
         exampleFormController,
         PageDomain(ExampleFormDomain()))
 
 @Service
 class ExampleFormController(@Autowired var exampleFormBackend: ExampleFormBackend): PageController<ExampleFormDomain>(
         actions = listOf(OnClickAction("openDialog") { exampleFormBackend.openDialog(it) },
-                OnClickAction("openDialogWithValues") { exampleFormBackend.openDialogWithValues(it) }))
+                OnClickAction("openDialogWithValues") { exampleFormBackend.openDialogWithValues(it) },
+                OnClickAction("navigateToHome") { exampleFormBackend.navigateToHome(it) }))
 
 data class ExampleFormDomain(val name: String = "")
 
@@ -37,10 +39,14 @@ class ExampleFormBackend {
     @Autowired lateinit var entityFormOnlyForEntity: ExampleFormOnlyForEntity
 
     fun openDialog(exampleFormDomain: ExampleFormDomain) = exampleFormDomain.apply {
-        EternalUI.showInUI(ModalWindow("modalExample1", entityFormOnlyForEntity, _cssClassName = "exampleDialogCssClass"))
+        EternalUI.showInUI(ModalWindow("modalExample1", entityFormOnlyForEntity.withEntity(ExampleFormOnlyForEntityDomain()), _cssClassName = "exampleDialogCssClass"))
     }
 
     fun openDialogWithValues(exampleFormDomain: ExampleFormDomain) = exampleFormDomain.apply {
         EternalUI.showInUI(ModalWindow("modalExample2", entityFormOnlyForEntity.withEntity(ExampleFormOnlyForEntityDomain("Test Start Name"))))
+    }
+
+    fun navigateToHome(exampleFormDomain: ExampleFormDomain): ExampleFormDomain = exampleFormDomain.apply {
+        EternalUI.navigateTo(HomeView::class.java, HomeDomain("Test Input From Example View"))
     }
 }

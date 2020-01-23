@@ -28,9 +28,14 @@ interface VaadinElementsHandler {
     fun <T: Any> showModalWindow(modalWindow: ModalWindow<T>)
     fun showUserMessage(userMessage: UserMessage)
     fun closeTopModalWindow()
+    fun navigateTo(uiComponent: Class<out Component>)
+    fun setInSession(key: String, it: Any)
+    fun getFromSession(key: String): Any?
+    fun removeFromSession(domainSessionKey: String): Any
 }
 
 val elementsHandler = Vaadin14UiElementsHandler()
+val domain_session_key = "domain_session_key"
 
 open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
 
@@ -41,6 +46,10 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
     }
 
     override fun beforeEnter(be: BeforeEnterEvent?) {
+        elementsHandler.getFromSession(domain_session_key)?.let {
+            page.pageDomain = PageDomain(it) as PageDomain<T>
+            elementsHandler.removeFromSession(domain_session_key)
+        }
         elementsHandler.cleanView(this)
         uiComponentToVaadinComponent = createMapUIComponentToVaadinComponent(page.uiView)
         setInContainerComponentsChildren()
@@ -209,6 +218,11 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
                 is ModalWindow<*> -> elementsHandler.showModalWindow(uiComponent)
                 is UserMessage -> elementsHandler.showUserMessage(uiComponent)
             }
+        }
+
+        fun navigateTo(uiComponent: Class<out Component>, domain: Any? = null) {
+            domain?.let { elementsHandler.setInSession(domain_session_key, it) }
+            elementsHandler.navigateTo(uiComponent)
         }
 
         fun closeTopModalWindow() {

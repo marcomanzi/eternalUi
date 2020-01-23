@@ -103,6 +103,7 @@ class Vaadin14UiElementsHandler: VaadinElementsHandler {
     override fun setValue(fieldValue: Any?, componentById: Component) {
         when(componentById) {
             is TextField -> componentById.value = fieldValue.toString()
+            is TextArea -> componentById.value = fieldValue.toString()
             is PasswordField -> componentById.value = fieldValue.toString()
             is DatePicker -> componentById.value = fieldValue as LocalDate
             is NumberField -> componentById.value = fieldValue as Double
@@ -203,5 +204,21 @@ class Vaadin14UiElementsHandler: VaadinElementsHandler {
             duration = 2000
             open()
         }
+    }
+
+    override fun navigateTo(uiComponent: Class<out Component>) {
+        UI.getCurrent().navigate(uiComponent)
+    }
+
+    override fun setInSession(key: String, value: Any) {
+        UI.getCurrent().session.setAttribute(key, value)
+    }
+
+    override fun removeFromSession(key: String) {
+        UI.getCurrent().session.setAttribute(key, null)
+    }
+
+    override fun getFromSession(key: String): Any? {
+        return UI.getCurrent().session.getAttribute(key)
     }
 }
