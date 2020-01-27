@@ -177,6 +177,13 @@ class Vaadin14UiElementsHandler: VaadinElementsHandler {
         }
     }
 
+    override fun refresh(component: Component, identifiable: Identifiable) {
+        when (component) {
+            is ComboBox<*> -> (component as ComboBox<Identifiable>).dataProvider.refreshItem(identifiable)
+            is com.vaadin.flow.component.grid.Grid<*> -> (component as com.vaadin.flow.component.grid.Grid<Identifiable>).dataProvider.refreshItem(identifiable)
+        }
+    }
+
     private val dialogKeyInSession = "LAST_OPENED_DIALOG"
     override fun <T: Any> showModalWindow(modalWindow: ModalWindow<T>) {
         if (UI.getCurrent().session.getAttribute(dialogKeyInSession) == null) {

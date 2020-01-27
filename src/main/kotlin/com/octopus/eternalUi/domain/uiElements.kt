@@ -1,5 +1,7 @@
 package com.octopus.eternalUi.domain
 
+import com.octopus.eternalUi.domain.db.Identifiable
+import com.octopus.eternalUi.vaadinBridge.EternalUI
 import com.vaadin.flow.component.Component
 import com.vaadin.flow.server.StreamResource
 import java.util.*
@@ -38,9 +40,23 @@ abstract class Page<T : Any>(val uiView: UIComponent, val pageController: PageCo
     }
 
     fun getFieldValue(id: String): Any? {
-        val field = pageDomain.dataClass.javaClass.getDeclaredField(id)
-        field.isAccessible = true
-        return field.get(pageDomain.dataClass)
+        return try {
+            val field = pageDomain.dataClass.javaClass.getDeclaredField(id)
+            field.isAccessible = true
+            field.get(pageDomain.dataClass)
+        } catch (e: NoSuchFieldException) {
+            null
+        }
+    }
+
+    fun removeFieldValue(id: String): Any? {
+        return try {
+            val value = getFieldValue(id)
+            setFieldValue(id, null)
+            value
+        } catch (e: NoSuchFieldException) {
+            null
+        }
     }
 
     fun setFieldValue(id: String, value: Any?) {

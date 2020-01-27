@@ -23,6 +23,7 @@ interface VaadinElementsHandler {
     fun addClickAction(component: Component, action: () -> Unit)
     fun addDataProviderTo(uiComponent: UIComponent, component: Component, dataProvider: com.octopus.eternalUi.domain.db.DataProvider<out Identifiable>)
     fun refresh(component: Component)
+    fun refresh(component: Component, identifiable: Identifiable)
     fun addCssClass(component: Component, uiComponent: UIComponent)
     fun addCssClass(component: Component, cssClassName: String)
     fun <T: Any> showModalWindow(modalWindow: ModalWindow<T>)
@@ -54,10 +55,11 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
         uiComponentToVaadinComponent = createMapUIComponentToVaadinComponent(page.uiView)
         setInContainerComponentsChildren()
         addMainUIToView()
+        activateDataProvidersOnComponents()
+        linkDataProviderFiltersToDomain()
         linkDomainToComponents()
         activateRestrictionsOnComponents()
         activateActionsOnComponents()
-        activateDataProvidersOnComponents()
         linkDataProviderFiltersToComponents()
         applyStileApplierFunction()
 
@@ -124,16 +126,24 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
 
     private fun linkFieldToFilters(fieldName: String) {
         try {
-            val componentById = getComponentById(fieldName)
-            elementsHandler.addValueChangeListener(componentById) { value ->
-                page.pageController.dataProviders.forEach {
-                    it.applyFilterValueToDataProvider(fieldName, value)
-                    elementsHandler.refresh(getComponentById(it.forComponentId))
+            if (isThereComponentById(fieldName)) {
+                val componentById = getComponentById(fieldName)
+                elementsHandler.addValueChangeListener(componentById) { value ->
+                    page.pageController.dataProviders.forEach {
+                        it.applyFilterValueToDataProvider(fieldName, value)
+                        elementsHandler.refresh(getComponentById(it.forComponentId))
+                    }
                 }
             }
         } catch (e: NoSuchElementException) {
             throw RuntimeException("No Element found for $fieldName", e)
         }
+    }
+
+    private fun linkDataProviderFiltersToDomain() {
+        page.pageController.dataProviders.forEach { it.filterIds.forEach { filterId ->
+            page.getFieldValue(filterId)?.let { value -> it.applyFilterValueToDataProvider(filterId, value) }
+        }}
     }
 
     private fun isThereComponentById(fieldName: String): Boolean = uiComponentToVaadinComponent.keys.any { it.id == fieldName}
@@ -159,6 +169,8 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
     private fun activateActionOnPage(action: Action<T>) {
         val refresher = refresher(action, page)
         when(action) {
+            is OnClickUIAction -> elementsHandler.addClickAction(getComponentById(action.onComponentId))
+            { refresher { applyNewDomainOnPage(action.onUIFunction(this).page.pageDomain.dataClass) } }
             is OnClickAction -> elementsHandler.addClickAction(getComponentById(action.onComponentId))
             { refresher { applyNewDomainOnPage(action.onDataDomainClassFunction(page.pageDomain.dataClass)) } }
             is OnClickReader -> elementsHandler.addClickAction(getComponentById(action.onComponentId))
@@ -194,6 +206,13 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
 
     fun refresh(componentId: String) {
         elementsHandler.refresh(getComponentById(componentId))
+    }
+
+    fun refresh(componentId: String, identifiable: Identifiable?) {
+        if (identifiable != null)
+            elementsHandler.refresh(getComponentById(componentId), identifiable)
+        else
+            elementsHandler.refresh(getComponentById(componentId))
     }
 
     private fun applyNewDomainOnPage(dataClass: Any) {
