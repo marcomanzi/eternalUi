@@ -1,9 +1,6 @@
 package com.octopus.eternalUi.domain
 
-import com.octopus.eternalUi.domain.db.Identifiable
-import com.octopus.eternalUi.vaadinBridge.EternalUI
 import com.vaadin.flow.component.Component
-import com.vaadin.flow.server.StreamResource
 import java.util.*
 import kotlin.reflect.KClass
 
@@ -34,6 +31,7 @@ abstract class Page<T : Any>(val uiView: UIComponent, val pageController: PageCo
         UIComponent(UUID.randomUUID().toString(), pageDomain.javaClass.simpleName) {
     private val observers: MutableMap<String, (Any?) -> Unit> = mutableMapOf()
     fun hasValues(vararg ids: String): Boolean = ids.all { getFieldValue(it).let { value -> value != null && value.toString().isNotEmpty() } }
+    fun anyValue(vararg ids: String): Boolean = ids.any { getFieldValue(it).let { value -> value != null && value.toString().isNotEmpty() } }
     fun toDebugString(): String = fields().map { "$it: ${getFieldValue(it)}" }.joinToString { it }.replace(",", "</br>")
     fun addFieldChangeObserver(fieldName: String, observer: (Any?) -> Unit) {
         observers[fieldName] = observer
