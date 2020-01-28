@@ -12,12 +12,12 @@ public class ListDataProvider<T extends Identifiable> extends AbstractDataProvid
 
     @SuppressWarnings("unchecked")
     public ListDataProvider(List<String> items) {
-        elements = (List<T>) items.stream().map(i -> (Identifiable) () -> i).collect(Collectors.toList());
+        elements = (List<T>) items.stream().map(i -> (Identifiable) new Message(i)).collect(Collectors.toList());
     }
 
     @SuppressWarnings("unchecked")
     public ListDataProvider(String... items) {
-        elements = (List<T>) Arrays.stream(items).map(i -> (Identifiable) () -> i).collect(Collectors.toList());
+        elements = (List<T>) Arrays.stream(items).map(i -> (Identifiable) new Message(i)).collect(Collectors.toList());
     }
 
     @Override
