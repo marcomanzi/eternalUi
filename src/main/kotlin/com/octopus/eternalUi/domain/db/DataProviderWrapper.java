@@ -1,6 +1,7 @@
 package com.octopus.eternalUi.domain.db;
 
 import com.vaadin.flow.data.provider.Query;
+import org.springframework.beans.BeanUtils;
 
 import java.util.stream.Stream;
 
@@ -30,7 +31,7 @@ public class DataProviderWrapper<T extends Identifiable> extends com.vaadin.flow
 
     @Override
     public void refreshItem(T v) {
-        super.refreshItem(v);
+        super.refreshItem(dataProvider.find(v.getUiId()));
     }
 
     public DataProvider<T> getDataProvider() {
