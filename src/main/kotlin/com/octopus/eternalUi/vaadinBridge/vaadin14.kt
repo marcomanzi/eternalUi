@@ -185,6 +185,7 @@ class Vaadin14UiElementsHandler: VaadinElementsHandler {
     }
 
     private val dialogKeyInSession = "LAST_OPENED_DIALOG"
+    private val confirmDialogKeyInSession = "LAST_OPENED_CONFIRM_DIALOG"
     override fun <T: Any> showModalWindow(modalWindow: ModalWindow<T>) {
         if (UI.getCurrent().session.getAttribute(dialogKeyInSession) == null) {
             Dialog().apply {
@@ -198,10 +199,30 @@ class Vaadin14UiElementsHandler: VaadinElementsHandler {
         }
     }
 
+    override fun showConfirmDialog(confirmDialog: ConfirmDialog) {
+        if (UI.getCurrent().session.getAttribute(confirmDialogKeyInSession) == null) {
+            Dialog().apply {
+                val mainPageComponentForUI = EternalUI(ConfirmDialogPage(confirmDialog)).prepareUI().mainPageComponentForUI()
+                addCssClass(mainPageComponentForUI, confirmDialog.cssClassName)
+                add(mainPageComponentForUI)
+                addDialogCloseActionListener { confirmDialog.onCancel() }
+                UI.getCurrent().session.setAttribute(confirmDialogKeyInSession, this)
+                isCloseOnEsc = true
+            }.open()
+        }
+    }
+
     override fun closeTopModalWindow() {
         if (UI.getCurrent().session.getAttribute(dialogKeyInSession) != null) {
             (UI.getCurrent().session.getAttribute(dialogKeyInSession) as Dialog).close()
             UI.getCurrent().session.setAttribute(dialogKeyInSession, null)
+        }
+    }
+
+    override fun closeConfirmDialog() {
+        if (UI.getCurrent().session.getAttribute(confirmDialogKeyInSession) != null) {
+            (UI.getCurrent().session.getAttribute(confirmDialogKeyInSession) as Dialog).close()
+            UI.getCurrent().session.setAttribute(confirmDialogKeyInSession, null)
         }
     }
 

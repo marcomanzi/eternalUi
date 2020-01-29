@@ -22,6 +22,7 @@ class ExampleForm(@Autowired var exampleFormController: ExampleFormController): 
                 Label("A simple UI with a grid, and a CRUD on the grid entity", "h3"),
                 Button("openDialog", caption = "Example Button that open a dialog"),
                 Button("openDialogWithValues", caption = "Example Button that open a dialog With starting values"),
+                Button("openConfirmDialog", caption = "Example Button that open a confirm dialog"),
                 Button("navigateToHome", caption = "Example Button to navigate to Home")),
         exampleFormController,
         PageDomain(ExampleFormDomain()))
@@ -30,6 +31,7 @@ class ExampleForm(@Autowired var exampleFormController: ExampleFormController): 
 class ExampleFormController(@Autowired var exampleFormBackend: ExampleFormBackend): PageController<ExampleFormDomain>(
         actions = listOf(OnClickAction("openDialog") { exampleFormBackend.openDialog(it) },
                 OnClickAction("openDialogWithValues") { exampleFormBackend.openDialogWithValues(it) },
+                OnClickAction("openConfirmDialog") { exampleFormBackend.openConfirmDialog(it) },
                 OnClickAction("navigateToHome") { exampleFormBackend.navigateToHome(it) }))
 
 data class ExampleFormDomain(val name: String = "")
@@ -48,5 +50,9 @@ class ExampleFormBackend {
 
     fun navigateToHome(exampleFormDomain: ExampleFormDomain): ExampleFormDomain = exampleFormDomain.apply {
         EternalUI.navigateTo(HomeView::class.java, HomeDomain("Test Input From Example View"))
+    }
+
+    fun openConfirmDialog(it: ExampleFormDomain): ExampleFormDomain = it.apply {
+        EternalUI.showInUI(ConfirmDialog("This is a test confirm dialog", { EternalUI.showInUI(UserMessage("You clicked ok")) }, { EternalUI.showInUI(UserMessage("You clicked cancel")) }))
     }
 }

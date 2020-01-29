@@ -7,6 +7,7 @@ import kotlin.reflect.KClass
 open class VerticalContainer(_id: String, vararg children: UIComponent, _cssClassName: String = ""): UIComponent(_id, _cssClassName, containedUIComponents = children.asList())
 open class HorizontalContainer(_id: String, vararg children: UIComponent, _cssClassName: String = ""): UIComponent(_id, _cssClassName, containedUIComponents = children.asList())
 open class ModalWindow<T: Any>(_id: String, val page: Page<T>, val onClose: (T) -> Unit = {}, _cssClassName: String = ""): UIComponent(_id, _cssClassName)
+open class ConfirmDialog(val message: String, val onOk: () -> Unit, val onCancel: () -> Unit = {}, val okMessage: String = "Ok", val cancelMessage: String = "Cancel", _cssClassName: String = "", _id: String = UUID.randomUUID().toString()): UIComponent(_id, _cssClassName)
 
 enum class UserMessageType { INFO }
 open class UserMessage(val message: String, val type: UserMessageType = UserMessageType.INFO): UIComponent(UUID.randomUUID().toString(), "")

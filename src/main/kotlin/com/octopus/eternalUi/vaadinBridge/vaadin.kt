@@ -33,11 +33,13 @@ interface VaadinElementsHandler {
     fun setInSession(key: String, it: Any)
     fun getFromSession(key: String): Any?
     fun removeFromSession(domainSessionKey: String): Any
+    fun showConfirmDialog(confirmDialog: ConfirmDialog)
+    fun closeConfirmDialog()
 }
 
 val elementsHandler = Vaadin14UiElementsHandler()
-val domain_session_key = "domain_session_key"
-
+const val domain_session_key = "domain_session_key"
+@Suppress("UNCHECKED_CAST")
 open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
 
     private lateinit var uiComponentToVaadinComponent: Map<UIComponent, Component>
@@ -236,6 +238,7 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
             when (uiComponent) {
                 is ModalWindow<*> -> elementsHandler.showModalWindow(uiComponent)
                 is UserMessage -> elementsHandler.showUserMessage(uiComponent)
+                is ConfirmDialog -> elementsHandler.showConfirmDialog(uiComponent)
             }
         }
 
@@ -246,6 +249,10 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
 
         fun closeTopModalWindow() {
             elementsHandler.closeTopModalWindow()
+        }
+
+        fun closeConfirmDialog() {
+            elementsHandler.closeConfirmDialog()
         }
     }
 
