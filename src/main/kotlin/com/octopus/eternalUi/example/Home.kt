@@ -8,16 +8,9 @@ import com.octopus.eternalUi.example.user.UserDomain
 import com.octopus.eternalUi.example.user.UserForm
 import com.octopus.eternalUi.vaadinBridge.EternalUI
 import com.vaadin.flow.component.UI
-import com.vaadin.flow.component.combobox.ComboBox
 import com.vaadin.flow.component.dependency.JsModule
-import com.vaadin.flow.component.dialog.Dialog
-import com.vaadin.flow.component.html.Div
-import com.vaadin.flow.router.BeforeEnterEvent
-import com.vaadin.flow.router.BeforeEnterObserver
 import com.vaadin.flow.router.Route
 import com.vaadin.flow.spring.annotation.UIScope
-import com.vaadin.flow.theme.Theme
-import com.vaadin.flow.theme.lumo.Lumo
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
