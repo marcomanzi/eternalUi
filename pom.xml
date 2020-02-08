@@ -3,19 +3,45 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.soldo.business</groupId>
-        <artifactId>spring-boot-parent</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
-        <relativePath/> <!-- lookup parent from repository -->
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-parent</artifactId>
+        <version>Greenwich.SR3</version>
+        <relativePath/>
     </parent>
-    <groupId>com.octopus</groupId>
+    <groupId>com.github.marcomanzi</groupId>
     <artifactId>eternalUi</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0</version>
     <name>eternalUi</name>
     <description>Eternal UI Framework</description>
     <packaging>jar</packaging>
+    <url>https://github.com/marcomanzi/eternalUi</url>
+
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>Marco Manzi</name>
+            <email>marcomanzi83@gmail.com</email>
+        </developer>
+    </developers>
+
+    <scm>
+        <url>https://github.com/marcomanzi/eternalUi/tree/dev</url>
+    </scm>
 
     <properties>
+        <java.version>11</java.version>
+        <java.source>${java.version}</java.source>
+        <java.target>${java.version}</java.target>
+        <java.release>${java.version}</java.release>
+        <kotlin.version>1.3.60</kotlin.version>
+        <spring-cloud.version>Greenwich.SR3</spring-cloud.version>
+
         <!-- Frontend -->
         <node.version>v8.16.0</node.version>
         <yarn.version>v1.16.0</yarn.version>
@@ -23,7 +49,22 @@
         <maven.resources.plugin.version>3.0.2</maven.resources.plugin.version>
         <maven.surefire.plugin.version>2.21.0</maven.surefire.plugin.version>
         <frontend.maven.plugin.version>1.6</frontend.maven.plugin.version>
+        <version.plugin.source>3.2.1</version.plugin.source>
+        <version.plugin.javadoc>3.1.1</version.plugin.javadoc>
     </properties>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>sonatype-nexus-snapshots</id>
+            <name>Sonatype Nexus Snapshots</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>sonatype-nexus-staging</id>
+            <name>Nexus Release Repository</name>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+        </repository>
+    </distributionManagement>
 
     <dependencies>
         <dependency>
@@ -142,6 +183,49 @@
                             </execution>
                         </executions>
                     </plugin>
+                    <!-- Attach source jars-->
+                    <plugin>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>${version.plugin.source}</version>
+                        <executions>
+                            <execution>
+                                <id>attach-source</id>
+                                <phase>compile</phase>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <!-- Attach javadocs jar -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>${version.plugin.javadoc}</version>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <!-- Sign artifacts for uploading to maven central -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>1.6</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
                 </plugins>
             </build>
         </profile>
@@ -180,8 +264,72 @@
         <pluginManagement>
             <plugins>
                 <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.8.1</version>
+                    <configuration>
+                        <source>${java.source}</source>
+                        <target>${java.target}</target>
+                        <release>${java.release}</release>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                </plugin>
+                <plugin>
                     <groupId>org.jetbrains.kotlin</groupId>
                     <artifactId>kotlin-maven-plugin</artifactId>
+                    <version>${kotlin.version}</version>
+                    <executions>
+                        <execution>
+                            <id>compile</id>
+                            <goals>
+                                <goal>compile</goal>
+                            </goals>
+                            <configuration>
+                                <sourceDirs>
+                                    <sourceDir>${project.basedir}/src/main/kotlin</sourceDir>
+                                    <sourceDir>${project.basedir}/src/main/java</sourceDir>
+                                </sourceDirs>
+                            </configuration>
+                        </execution>
+                        <execution>
+                            <id>test-compile</id>
+                            <goals>
+                                <goal>test-compile</goal>
+                            </goals>
+                            <configuration>
+                                <sourceDirs>
+                                    <sourceDir>${project.basedir}/src/test/kotlin</sourceDir>
+                                    <sourceDir>${project.basedir}/src/test/java</sourceDir>
+                                </sourceDirs>
+                            </configuration>
+                        </execution>
+                    </executions>
+                    <configuration>
+                        <args>
+                            <arg>-Xjsr305=strict</arg>
+                        </args>
+                        <compilerPlugins>
+                            <plugin>spring</plugin>
+                        </compilerPlugins>
+                    </configuration>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.jetbrains.kotlin</groupId>
+                            <artifactId>kotlin-maven-allopen</artifactId>
+                            <version>${kotlin.version}</version>
+                        </dependency>
+                    </dependencies>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>versions-maven-plugin</artifactId>
+                    <version>2.7</version>
+                    <configuration>
+                        <generateBackupPoms>false</generateBackupPoms>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -205,6 +353,26 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>${maven.surefire.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <version>3.0.0</version>
+                    <executions>
+                        <execution>
+                            <id>copy-dependencies</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>copy-dependencies</goal>
+                            </goals>
+                            <configuration>
+                                <outputDirectory>../../lib/</outputDirectory>
+                                <overWriteReleases>false</overWriteReleases>
+                                <overWriteSnapshots>false</overWriteSnapshots>
+                                <overWriteIfNewer>true</overWriteIfNewer>
+                            </configuration>
+                        </execution>
+                    </executions>
                 </plugin>
             </plugins>
         </pluginManagement>
