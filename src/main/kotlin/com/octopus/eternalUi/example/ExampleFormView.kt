@@ -1,6 +1,8 @@
 package com.octopus.eternalUi.example
 
  import com.octopus.eternalUi.domain.*
+ import com.octopus.eternalUi.domain.db.Identifiable
+ import com.octopus.eternalUi.domain.db.ListDataProvider
  import com.octopus.eternalUi.vaadinBridge.EternalUI
  import com.vaadin.flow.component.dependency.JsModule
  import com.vaadin.flow.router.Route
@@ -8,6 +10,7 @@ package com.octopus.eternalUi.example
  import org.springframework.beans.factory.annotation.Autowired
  import org.springframework.stereotype.Component
  import org.springframework.stereotype.Service
+ import java.util.*
 
 @Route("exampleUI")
 @UIScope
@@ -20,6 +23,7 @@ class ExampleForm(@Autowired var exampleFormController: ExampleFormController): 
         VerticalContainer("exampleFormContainer",
                 Label("Example Eternal UI Application", "h1"),
                 Label("A simple UI with a grid, and a CRUD on the grid entity", "h3"),
+                Grid("listBasedGrid", GridBean::class, listOf("name", "surname")),
                 Button("openDialog", caption = "Example Button that open a dialog"),
                 Button("openDialogWithValues", caption = "Example Button that open a dialog With starting values"),
                 Button("openConfirmDialog", caption = "Example Button that open a confirm dialog"),
@@ -29,12 +33,17 @@ class ExampleForm(@Autowired var exampleFormController: ExampleFormController): 
 
 @Service
 class ExampleFormController(@Autowired var exampleFormBackend: ExampleFormBackend): PageController<ExampleFormDomain>(
+        dataProviders = listOf(DataProvider("listBasedGrid", ListDataProvider<GridBean>(GridBean("Marco", "Manzi"), GridBean("Francesco", "Manzi")))),
         actions = listOf(OnClickAction("openDialog") { exampleFormBackend.openDialog(it) },
                 OnClickAction("openDialogWithValues") { exampleFormBackend.openDialogWithValues(it) },
                 OnClickAction("openConfirmDialog") { exampleFormBackend.openConfirmDialog(it) },
                 OnClickAction("navigateToHome") { exampleFormBackend.navigateToHome(it) }))
 
 data class ExampleFormDomain(val name: String = "")
+
+data class GridBean(val name: String, val surname: String): Identifiable {
+    override fun getUiId(): String = UUID.randomUUID().toString()
+}
 
 @Service
 class ExampleFormBackend {

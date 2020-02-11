@@ -20,6 +20,10 @@ public class ListDataProvider<T extends Identifiable> extends AbstractDataProvid
         elements = (List<T>) Arrays.stream(items).map(i -> (Identifiable) new Message(i)).collect(Collectors.toList());
     }
 
+    public ListDataProvider(T... items) {
+        elements = Arrays.stream(items).collect(Collectors.toList());
+    }
+
     @Override
     public int count(Map<String, String> filters) {
         return elements.size();

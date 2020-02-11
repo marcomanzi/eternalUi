@@ -11,11 +11,14 @@ import com.vaadin.flow.component.UI
 import com.vaadin.flow.component.dependency.JsModule
 import com.vaadin.flow.router.Route
 import com.vaadin.flow.spring.annotation.UIScope
+import com.vaadin.flow.theme.Theme
+import com.vaadin.flow.theme.lumo.Lumo
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
 
 @Route("")
+@Theme(Lumo::class)
 @UIScope
 @JsModule("./example-style.js")
 class HomeView(@Autowired var home: Home): EternalUI<HomeDomain>(home)
