@@ -46,4 +46,8 @@ public class ListDataProvider<T extends Identifiable> extends AbstractDataProvid
     public void addFilter(String name, String value) {
         super.addFilter(name, value);
     }
+
+    public List<T> getElements() {
+        return elements;
+    }
 }
