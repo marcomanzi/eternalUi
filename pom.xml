@@ -51,6 +51,8 @@
         <frontend.maven.plugin.version>1.6</frontend.maven.plugin.version>
         <version.plugin.source>3.2.1</version.plugin.source>
         <version.plugin.javadoc>3.1.1</version.plugin.javadoc>
+        <version.plugin.gpg>1.6</version.plugin.gpg>
+        <gpg.executable>gpg2</gpg.executable>
     </properties>
 
     <distributionManagement>
@@ -185,6 +187,7 @@
                     </plugin>
                     <!-- Attach source jars-->
                     <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-source-plugin</artifactId>
                         <version>${version.plugin.source}</version>
                         <executions>
@@ -211,6 +214,20 @@
                             </execution>
                         </executions>
                     </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>${version.plugin.gpg}</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
                 </plugins>
             </build>
         </profile>
@@ -228,18 +245,6 @@
                     </plugin>
                 </plugins>
             </build>
-            <distributionManagement>
-                <repository>
-                    <id>soldo-nexus</id>
-                    <name>Internal Releases</name>
-                    <url>http://px-dev-tools.px.iefcloud.com:8081/repository/prod-releases/</url>
-                </repository>
-                <snapshotRepository>
-                    <id>soldo-nexus</id>
-                    <name>Internal Snapshot</name>
-                    <url>http://px-dev-tools.px.iefcloud.com:8081/repository/prod-snapshots/</url>
-                </snapshotRepository>
-            </distributionManagement>
         </profile>
     </profiles>
     <build>
