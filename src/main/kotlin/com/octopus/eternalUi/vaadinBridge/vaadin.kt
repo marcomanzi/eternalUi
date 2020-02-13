@@ -35,6 +35,7 @@ interface VaadinElementsHandler {
     fun removeFromSession(domainSessionKey: String): Any
     fun showConfirmDialog(confirmDialog: ConfirmDialog)
     fun closeConfirmDialog()
+    fun <T: Any> addDownloadInputStream(action: DownloadAction<T>, domain: T, componentById: Component)
 }
 
 val elementsHandler = Vaadin14UiElementsHandler()
@@ -181,6 +182,7 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
             { refresher { applyNewDomainOnPage(action.onDataDomainClassFunction(page.pageDomain.dataClass)) }}
             is OnChangeReader-> elementsHandler.addOnChangeAction(getComponentById(action.onComponentId))
             { refresher { action.onDataDomainClassReader(page.pageDomain.dataClass) }}
+            is DownloadAction-> elementsHandler.addDownloadInputStream(action, page.pageDomain.dataClass, getComponentById(action.onComponentId))
         }
     }
 
@@ -215,6 +217,11 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
             elementsHandler.refresh(getComponentById(componentId), identifiable)
         else
             elementsHandler.refresh(getComponentById(componentId))
+    }
+
+    fun refreshItemsAfterAction(vararg componentIdsToRefresh: String, function: (EternalUI<T>) -> Unit): EternalUI<T> = this.apply {
+        function(this)
+        componentIdsToRefresh.forEach { refresh(it) }
     }
 
     private fun applyNewDomainOnPage(dataClass: Any) {

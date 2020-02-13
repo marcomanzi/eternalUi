@@ -8,6 +8,7 @@ import com.vaadin.flow.component.*
 import com.vaadin.flow.component.combobox.ComboBox
 import com.vaadin.flow.component.datepicker.DatePicker
 import com.vaadin.flow.component.dialog.Dialog
+import com.vaadin.flow.component.html.Anchor
 import com.vaadin.flow.component.html.Div
 import com.vaadin.flow.component.html.Label
 import com.vaadin.flow.component.icon.Icon
@@ -18,6 +19,9 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout
 import com.vaadin.flow.component.textfield.*
 import com.vaadin.flow.data.value.ValueChangeMode
 import com.vaadin.flow.router.RouterLink
+import com.vaadin.flow.server.InputStreamFactory
+import com.vaadin.flow.server.StreamResource
+import java.io.FileInputStream
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.util.*
@@ -40,10 +44,18 @@ class Vaadin14UiElementsHandler: VaadinElementsHandler {
                 is Input -> createFor(uiComponent)
                 is InputNumber -> createFor(uiComponent)
                 is Button -> com.vaadin.flow.component.button.Button(uiComponent.caption)
+                is DownloadButton -> downloadButton(uiComponent)
                 is Grid -> com.vaadin.flow.component.grid.Grid(uiComponent.elementType.java).apply { setupGrid(this, uiComponent.columns) }
                 is InsideAppLink -> RouterLink(uiComponent.caption, uiComponent.uiViewClass)
                 else -> Div()
             }
+
+    private fun downloadButton(downloadButton: DownloadButton): Component {
+        val download = Anchor("")
+        download.element.setAttribute("download", true)
+        download.add(com.vaadin.flow.component.button.Button(downloadButton.caption))
+        return download
+    }
 
     override fun addCssClass(component: Component, uiComponent: UIComponent) {
         if (component is HasStyle) (component as HasStyle).addClassName(uiComponent.javaClass.simpleName)
@@ -153,6 +165,10 @@ class Vaadin14UiElementsHandler: VaadinElementsHandler {
             is com.vaadin.flow.component.grid.Grid<*> -> component.addItemClickListener { action() }
             else -> (component as ClickNotifier<*>).addClickListener { action() }
         }
+    }
+
+    override fun <T : Any> addDownloadInputStream(action: DownloadAction<T>, domain: T, componentById: Component) {
+        (componentById as Anchor).setHref(StreamResource(action.fileName, InputStreamFactory { action.onDataDomainInputStream(domain) }))
     }
 
     override fun addDataProviderTo(uiComponent: UIComponent, component: Component, dataProvider: com.octopus.eternalUi.domain.db.DataProvider<out Identifiable>) {

@@ -8,8 +8,10 @@ package com.octopus.eternalUi.example
  import com.vaadin.flow.router.Route
  import com.vaadin.flow.spring.annotation.UIScope
  import org.springframework.beans.factory.annotation.Autowired
+ import org.springframework.core.io.ClassPathResource
  import org.springframework.stereotype.Component
  import org.springframework.stereotype.Service
+ import java.io.FileInputStream
  import java.util.*
 
 @Route("exampleUI")
@@ -28,7 +30,8 @@ class ExampleForm(@Autowired var exampleFormController: ExampleFormController): 
                 Button("openDialog", caption = "Example Button that open a dialog"),
                 Button("openDialogWithValues", caption = "Example Button that open a dialog With starting values"),
                 Button("openConfirmDialog", caption = "Example Button that open a confirm dialog"),
-                Button("navigateToHome", caption = "Example Button to navigate to Home")),
+                Button("navigateToHome", caption = "Example Button to navigate to Home"),
+                DownloadButton("downloadCsv")),
         exampleFormController,
         PageDomain(ExampleFormDomain()))
 
@@ -40,7 +43,8 @@ class ExampleFormController(@Autowired var exampleFormBackend: ExampleFormBacken
                 OnClickAction("openDialog") { exampleFormBackend.openDialog(it) },
                 OnClickAction("openDialogWithValues") { exampleFormBackend.openDialogWithValues(it) },
                 OnClickAction("openConfirmDialog") { exampleFormBackend.openConfirmDialog(it) },
-                OnClickAction("navigateToHome") { exampleFormBackend.navigateToHome(it) }))
+                OnClickAction("navigateToHome") { exampleFormBackend.navigateToHome(it) },
+                DownloadAction("downloadCsv", "test.csv") { ClassPathResource("testFile.csv").inputStream }))
 
 data class ExampleFormDomain(val name: String = "")
 
@@ -69,9 +73,7 @@ class ExampleFormBackend {
         EternalUI.showInUI(ConfirmDialog("This is a test confirm dialog", { EternalUI.showInUI(UserMessage("You clicked ok")) }, { EternalUI.showInUI(UserMessage("You clicked cancel")) }))
     }
 
-    fun addElementToGrid(it: EternalUI<ExampleFormDomain>): EternalUI<ExampleFormDomain> {
+    fun addElementToGrid(it: EternalUI<ExampleFormDomain>): EternalUI<ExampleFormDomain> = it.refreshItemsAfterAction("listBasedGrid") {
         listDataProvider.elements.add(GridBean("New" + UUID.randomUUID().toString(), "Surname"))
-        it.refresh("listBasedGrid")
-        return it
     }
 }
