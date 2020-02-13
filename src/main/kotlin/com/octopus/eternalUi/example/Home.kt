@@ -18,7 +18,6 @@ import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
 
 @Route("")
-@Theme(Lumo::class)
 @UIScope
 @JsModule("./example-style.js")
 class HomeView(@Autowired var home: Home): EternalUI<HomeDomain>(home)
