@@ -7,6 +7,8 @@ import kotlin.reflect.KClass
 
 open class VerticalContainer(_id: String, vararg children: UIComponent, _cssClassName: String = ""): UIComponent(_id, _cssClassName, containedUIComponents = children.asList())
 open class HorizontalContainer(_id: String, vararg children: UIComponent, _cssClassName: String = ""): UIComponent(_id, _cssClassName, containedUIComponents = children.asList())
+open class TabsContainer(_id: String, vararg children: Tab<*>, _cssClassName: String = ""): UIComponent(_id, _cssClassName, containedUIComponents = children.asList())
+open class Tab<T: Any>(_id: String, val page: Page<T>, _cssClassName: String = ""): UIComponent(_id, _cssClassName)
 open class ModalWindow<T: Any>(_id: String, val page: Page<T>, val onClose: (T) -> Unit = {}, _cssClassName: String = ""): UIComponent(_id, _cssClassName)
 open class ConfirmDialog(val message: String, val onOk: () -> Unit, val onCancel: () -> Unit = {}, val okMessage: String = "Ok", val cancelMessage: String = "Cancel", _cssClassName: String = "", _id: String = UUID.randomUUID().toString()): UIComponent(_id, _cssClassName)
 
@@ -30,7 +32,7 @@ data class Grid(private val _id: String, val elementType: KClass<out Any>, val c
 open class EmptyDomain
 
 @Suppress("UNCHECKED_CAST")
-abstract class Page<T : Any>(val uiView: UIComponent, val pageController: PageController<T>, var pageDomain: PageDomain<T> = PageDomain(EmptyDomain() as T)):
+abstract class Page<T : Any>(val uiView: UIComponent, val pageController: PageController<T> = PageController(), var pageDomain: PageDomain<T> = PageDomain(EmptyDomain() as T)):
         UIComponent(UUID.randomUUID().toString(), pageDomain.javaClass.simpleName) {
     private val observers: MutableMap<String, (Any?) -> Unit> = mutableMapOf()
     fun hasValues(vararg ids: String): Boolean = ids.all { getFieldValue(it).let { value -> value != null && value.toString().isNotEmpty() } }

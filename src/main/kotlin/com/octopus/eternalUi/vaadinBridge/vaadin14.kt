@@ -16,6 +16,8 @@ import com.vaadin.flow.component.icon.VaadinIcon
 import com.vaadin.flow.component.notification.Notification
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout
 import com.vaadin.flow.component.orderedlayout.VerticalLayout
+import com.vaadin.flow.component.tabs.Tab
+import com.vaadin.flow.component.tabs.Tabs
 import com.vaadin.flow.component.textfield.*
 import com.vaadin.flow.data.value.ValueChangeMode
 import com.vaadin.flow.router.RouterLink
@@ -34,12 +36,17 @@ class Vaadin14UiElementsHandler: VaadinElementsHandler {
                 }}}
 
     override fun addToParent(parent: Component, children: List<Component>): Component =
-            parent.apply { (this as HasComponents).add(*children.toTypedArray()) }
+            if (parent is Tabs) {
+                parent.apply { parent.selectedIndex = 1 }
+            } else {
+                parent.apply { (this as HasComponents).add(*children.toTypedArray()) }
+            }
 
     override fun createFor(uiComponent: UIComponent): Component =
             when(uiComponent) {
                 is VerticalContainer -> VerticalLayout().apply { isSpacing = false; isMargin = false; setSizeFull() }
                 is HorizontalContainer -> HorizontalLayout().apply { isMargin = false; setSizeFull() }
+                is TabsContainer -> Tabs().apply { setupTabs(uiComponent, this) }
                 is com.octopus.eternalUi.domain.Label -> Label(uiComponent.caption)
                 is Input -> createFor(uiComponent)
                 is InputNumber -> createFor(uiComponent)
@@ -49,6 +56,20 @@ class Vaadin14UiElementsHandler: VaadinElementsHandler {
                 is InsideAppLink -> RouterLink(uiComponent.caption, uiComponent.uiViewClass)
                 else -> Div()
             }
+
+    private fun setupTabs(uiComponent: UIComponent, tabs: Tabs) {
+        tabs.setSizeFull()
+        uiComponent.containedUIComponents.forEach { tabs.add(Tab(captionFrom(it.id))) }
+        tabs.addSelectedChangeListener {
+            val tabToShow = uiComponent.containedUIComponents.first { ui -> (it.selectedTab.label == captionFrom(ui.id)) } as com.octopus.eternalUi.domain.Tab<*>
+            tabs.parent.ifPresent { parent ->
+//                uiComponent.metadata["shownPage"] = EternalUI(tabToShow.page).prepareUI().mainPageComponentForUI()
+//                (parent as HasComponents).
+//                (parent as HasComponents).removeL()
+                addToParent(parent, EternalUI(tabToShow.page).prepareUI().mainPageComponentForUI())
+            }
+        }
+    }
 
     private fun downloadButton(downloadButton: DownloadButton): Component {
         val download = Anchor("")
