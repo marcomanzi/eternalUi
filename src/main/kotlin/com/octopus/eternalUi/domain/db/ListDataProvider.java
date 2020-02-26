@@ -25,12 +25,12 @@ public class ListDataProvider<T extends Identifiable> extends AbstractDataProvid
     }
 
     @Override
-    public int count(Map<String, String> filters) {
+    public int count(Map<String, Object> filters) {
         return elements.size();
     }
 
     @Override
-    public List<T> page(Page page, Map<String, String> filters) {
+    public List<T> page(Page page, Map<String, Object> filters) {
         int fromIndex = page.page;
         int toIndex = fromIndex + page.size;
         if (toIndex > count(filters)) return elements;
@@ -43,7 +43,7 @@ public class ListDataProvider<T extends Identifiable> extends AbstractDataProvid
     }
 
     @Override
-    public void addFilter(String name, String value) {
+    public void addFilter(String name, Object value) {
         super.addFilter(name, value);
     }
 

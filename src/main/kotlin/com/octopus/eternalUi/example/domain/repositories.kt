@@ -25,25 +25,25 @@ class UserDataProvider(private val userRepository: UserRepository): AbstractData
 
     override fun find(id: String?): UserUI = toUI(userRepository.findById(UUID.fromString(id!!)).get())
 
-    override fun page(page: Page?, filters: MutableMap<String, String>?): MutableList<UserUI> {
+    override fun page(page: Page?, filters: MutableMap<String, Any>?): MutableList<UserUI> {
         return userRepository.findAll(specificationFromFilters(filters), PageRequest.of(page!!.page, page.size)).content
                 .map { toUI(it) }.toMutableList()
     }
 
-    private fun specificationFromFilters(filters: MutableMap<String, String>?): (Root<User>, CriteriaQuery<*>, CriteriaBuilder) -> Predicate =
+    private fun specificationFromFilters(filters: MutableMap<String, Any>?): (Root<User>, CriteriaQuery<*>, CriteriaBuilder) -> Predicate =
             { root, _, cb ->
                 var pred = cb.and(cb.conjunction())
-                filters?.get("searchName")?.let { pred = cb.and(pred, cb.like(cb.lower(root.get("name")), "%${it.toLowerCase()}%")) }
+                filters?.get("searchName")?.let { pred = cb.and(pred, cb.like(cb.lower(root.get("name")), "%${it.toString().toLowerCase()}%")) }
                 pred
             }
 
-    override fun count(filters: MutableMap<String, String>?): Int = userRepository.count(specificationFromFilters(filters)).toInt()
+    override fun count(filters: MutableMap<String, Any>?): Int = userRepository.count(specificationFromFilters(filters)).toInt()
 }
 
 @Component
 class CityDataProvider(): AbstractDataProvider<Message>() {
     val cities = listOf("Rome", "Milan").map { Message(it) }
-    override fun count(filters: MutableMap<String, String>?): Int = cities.size
-    override fun page(page: Page?, filters: MutableMap<String, String>?): MutableList<Message> = cities.toMutableList()
+    override fun count(filters: MutableMap<String, Any>?): Int = cities.size
+    override fun page(page: Page?, filters: MutableMap<String, Any>?): MutableList<Message> = cities.toMutableList()
     override fun find(id: String?): Message = cities.first { it.message == id }
 }

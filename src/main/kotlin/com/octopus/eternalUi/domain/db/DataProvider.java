@@ -6,15 +6,15 @@ import java.util.Map;
 
 public interface DataProvider<T extends Identifiable> {
 
-    int count(Map<String, String> filters);
+    int count(Map<String, Object> filters);
 
-    List<T> page(Page page, Map<String, String> filters);
+    List<T> page(Page page, Map<String, Object> filters);
 
     T find(String id);
 
-    void addFilter(String name, String value);
+    void addFilter(String name, Object value);
 
-    Map<String, String> getFilters();
+    Map<String, Object> getFilters();
 
     void removeFilter(String name);
 

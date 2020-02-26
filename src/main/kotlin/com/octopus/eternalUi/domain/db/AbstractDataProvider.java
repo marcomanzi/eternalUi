@@ -7,15 +7,15 @@ import java.util.Map;
 
 public abstract class AbstractDataProvider<T extends Identifiable> implements DataProvider<T> {
 
-    protected Map<String, String> filters = new HashMap<>();
+    protected Map<String, Object> filters = new HashMap<>();
 
     @Override
-    public void addFilter(String name, String value) {
+    public void addFilter(String name, Object value) {
         filters.put(name, value);
     }
 
     @Override
-    public Map<String, String> getFilters() {
+    public Map<String, Object> getFilters() {
         return filters;
     }
 
