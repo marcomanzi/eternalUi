@@ -36,6 +36,7 @@ interface VaadinElementsHandler {
     fun showConfirmDialog(confirmDialog: ConfirmDialog)
     fun closeConfirmDialog()
     fun <T: Any> addDownloadInputStream(action: DownloadAction<T>, domain: T, componentById: Component)
+    fun getMainComponentFor(componentById: Component): Component
 }
 
 val elementsHandler = Vaadin14UiElementsHandler()
@@ -71,8 +72,9 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
 
     private fun applyStileApplierFunction() {
         uiComponentToVaadinComponent.keys.forEach {
-            elementsHandler.addCssClass(getComponentById(it.id), it)
-            elementsHandler.addCssClass(getComponentById(it.id), it.cssClassName)
+            val component = elementsHandler.getMainComponentFor(getComponentById(it.id))
+            elementsHandler.addCssClass(component, it)
+            elementsHandler.addCssClass(component, it.cssClassName)
             it.styleApplyer?.invoke(this)
         }
     }
@@ -161,7 +163,7 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
 
     private fun activateRuleOnPage(rule: Rule<T>) {
         when(rule) {
-            is EnabledRule -> elementsHandler.enable(getComponentById(rule.onComponentId), rule.condition(page))
+            is EnabledRule -> elementsHandler.enable(elementsHandler.getMainComponentFor(getComponentById(rule.onComponentId)), rule.condition(page))
         }
     }
 

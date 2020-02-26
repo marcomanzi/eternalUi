@@ -23,7 +23,6 @@ import com.vaadin.flow.data.value.ValueChangeMode
 import com.vaadin.flow.router.RouterLink
 import com.vaadin.flow.server.InputStreamFactory
 import com.vaadin.flow.server.StreamResource
-import java.io.FileInputStream
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.util.*
@@ -63,9 +62,6 @@ class Vaadin14UiElementsHandler: VaadinElementsHandler {
         tabs.addSelectedChangeListener {
             val tabToShow = uiComponent.containedUIComponents.first { ui -> (it.selectedTab.label == captionFrom(ui.id)) } as com.octopus.eternalUi.domain.Tab<*>
             tabs.parent.ifPresent { parent ->
-//                uiComponent.metadata["shownPage"] = EternalUI(tabToShow.page).prepareUI().mainPageComponentForUI()
-//                (parent as HasComponents).
-//                (parent as HasComponents).removeL()
                 addToParent(parent, EternalUI(tabToShow.page).prepareUI().mainPageComponentForUI())
             }
         }
@@ -91,6 +87,10 @@ class Vaadin14UiElementsHandler: VaadinElementsHandler {
         grid.setColumns(*columns.toTypedArray())
         grid.columns.forEach { it.isSortable = false }
     }
+
+    override fun getMainComponentFor(componentById: Component): Component =
+            if (componentById is Anchor) componentById.children.findFirst().get()
+            else componentById
 
     private fun createFor(input: Input): Component =
             when(input.type) {
