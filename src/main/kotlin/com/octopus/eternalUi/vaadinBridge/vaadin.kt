@@ -3,6 +3,8 @@ package com.octopus.eternalUi.vaadinBridge
 import com.octopus.eternalUi.domain.*
 import com.octopus.eternalUi.domain.db.Identifiable
 import com.vaadin.flow.component.Component
+import com.vaadin.flow.component.HasComponents
+import com.vaadin.flow.component.HasElement
 import com.vaadin.flow.component.html.Div
 import com.vaadin.flow.router.BeforeEnterEvent
 import com.vaadin.flow.router.BeforeEnterObserver
@@ -12,6 +14,7 @@ interface VaadinElementsHandler {
     fun createFor(uiComponent: UIComponent): Component
     fun addToParent(parent: Component, children: List<Component>): Component
     fun addToParent(parent: Component, child: Component): Component = addToParent(parent, listOf(child))
+    fun removeFromContainer(container: HasComponents)
 
     fun debugButton(toDebugStringSupplier: () -> String): Component
     fun setValue(fieldValue: Any?, componentById: Component)
@@ -98,6 +101,9 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
 
         uiComponentToVaadinComponent.keys.filter { it.containedUIComponents.isNotEmpty() }.forEach {
             addVaadinComponentsToContainer(it)
+            if (it is TabsContainer) {
+                elementsHandler.addToParent(vaadinComponentForUi(it).parent.get(), EternalUI((it.containedUIComponents.first() as Tab<*>).page).prepareUI().mainPageComponentForUI())
+            }
         }
     }
 

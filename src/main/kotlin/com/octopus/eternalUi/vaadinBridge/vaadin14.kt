@@ -26,6 +26,7 @@ import com.vaadin.flow.server.StreamResource
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.util.*
+import kotlin.streams.asSequence
 
 @Suppress("UNCHECKED_CAST")
 class Vaadin14UiElementsHandler: VaadinElementsHandler {
@@ -36,7 +37,7 @@ class Vaadin14UiElementsHandler: VaadinElementsHandler {
 
     override fun addToParent(parent: Component, children: List<Component>): Component =
             if (parent is Tabs) {
-                parent.apply { parent.selectedIndex = 1 }
+                parent.apply { parent.selectedIndex = 0 }
             } else {
                 parent.apply { (this as HasComponents).add(*children.toTypedArray()) }
             }
@@ -62,9 +63,17 @@ class Vaadin14UiElementsHandler: VaadinElementsHandler {
         tabs.addSelectedChangeListener {
             val tabToShow = uiComponent.containedUIComponents.first { ui -> (it.selectedTab.label == captionFrom(ui.id)) } as com.octopus.eternalUi.domain.Tab<*>
             tabs.parent.ifPresent { parent ->
-                addToParent(parent, EternalUI(tabToShow.page).prepareUI().mainPageComponentForUI())
+                it.selectedTab.parent.ifPresent { container ->
+                    val tabsContainer = container.parent.get() as VerticalLayout
+                    tabsContainer.remove(tabsContainer.children.asSequence().last())
+                    addToParent(tabsContainer, EternalUI(tabToShow.page).prepareUI().mainPageComponentForUI())
+                }
             }
         }
+    }
+
+    override fun removeFromContainer(container: HasComponents) {
+        container.removeAll()
     }
 
     private fun downloadButton(downloadButton: DownloadButton): Component {
