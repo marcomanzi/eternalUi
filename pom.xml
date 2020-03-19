@@ -10,12 +10,16 @@
     </parent>
     <groupId>com.github.marcomanzi</groupId>
     <artifactId>eternalUi</artifactId>
-    <version>1.1.4</version>
+    <version>1.1.4-SNAPSHOT</version>
     <name>eternalUi</name>
-    <description>Eternal UI Framework</description>
     <packaging>jar</packaging>
     <url>https://github.com/marcomanzi/eternalUi</url>
-
+    <description>Eternal UI Framework</description>
+    <scm>
+        <connection>scm:git:git://github.com/marcomanzi/eternalUi.git</connection>
+        <developerConnection>scm:git:git://github.com/marcomanzi/eternalUi.git</developerConnection>
+        <url>https://github.com/marcomanzi/eternalUi</url>
+    </scm>
     <licenses>
         <license>
             <name>The Apache Software License, Version 2.0</name>
@@ -29,10 +33,6 @@
             <email>marcomanzi83@gmail.com</email>
         </developer>
     </developers>
-
-    <scm>
-        <url>https://github.com/marcomanzi/eternalUi/tree/dev</url>
-    </scm>
 
     <properties>
         <java.version>11</java.version>
