@@ -12,10 +12,14 @@
     <artifactId>eternalUi</artifactId>
     <version>1.1.4</version>
     <name>eternalUi</name>
-    <description>Eternal UI Framework</description>
     <packaging>jar</packaging>
     <url>https://github.com/marcomanzi/eternalUi</url>
-
+    <description>Eternal UI Framework</description>
+    <scm>
+        <connection>scm:git:git://github.com/marcomanzi/eternalUi.git</connection>
+        <developerConnection>scm:git:git://github.com/marcomanzi/eternalUi.git</developerConnection>
+        <url>https://github.com/marcomanzi/eternalUi</url>
+    </scm>
     <licenses>
         <license>
             <name>The Apache Software License, Version 2.0</name>
@@ -29,10 +33,6 @@
             <email>marcomanzi83@gmail.com</email>
         </developer>
     </developers>
-
-    <scm>
-        <url>https://github.com/marcomanzi/eternalUi/tree/dev</url>
-    </scm>
 
     <properties>
         <java.version>11</java.version>
@@ -138,6 +138,11 @@
             </dependencies>
             <build>
                 <plugins>
+                    <plugin>
+                        <groupId>com.amashchenko.maven.plugin</groupId>
+                        <artifactId>gitflow-maven-plugin</artifactId>
+                        <version>1.14.0</version>
+                    </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-compiler-plugin</artifactId>
