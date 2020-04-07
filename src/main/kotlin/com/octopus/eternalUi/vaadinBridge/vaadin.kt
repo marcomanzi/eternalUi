@@ -1,6 +1,7 @@
 package com.octopus.eternalUi.vaadinBridge
 
 import com.octopus.eternalUi.domain.*
+import com.octopus.eternalUi.domain.db.AbstractDomainAwareDataProvider
 import com.octopus.eternalUi.domain.db.Identifiable
 import com.vaadin.flow.component.Component
 import com.vaadin.flow.component.HasComponents
@@ -53,6 +54,8 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
         beforeEnter(null)
     }
 
+    open fun customBehaviourOnEnter(eternalUI: EternalUI<T>) {}
+
     override fun beforeEnter(be: BeforeEnterEvent?) {
         elementsHandler.getFromSession(domain_session_key)?.let {
             page.pageDomain = PageDomain(it) as PageDomain<T>
@@ -71,6 +74,7 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
         applyStileApplierFunction()
 
         addDebugButton()
+        customBehaviourOnEnter(this)
     }
 
     private fun applyStileApplierFunction() {
@@ -115,7 +119,20 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
 
     private fun vaadinComponentForUi(it: UIComponent): Component = uiComponentToVaadinComponent[it] ?: error("No Vaadin component found for uiComponent defined")
 
-    private fun linkDomainToComponents() = page.fields().forEach { linkFieldToComponent(it) }
+    private fun linkDomainToComponents() {
+        page.fields().forEach { linkFieldToComponent(it) }
+        linkFieldsToSession()
+
+    }
+
+    private fun linkFieldsToSession() {
+        keysInSession.forEach { fieldName ->
+            if (getFromSession(fieldName) != null && isThereComponentById(fieldName)) {
+                val componentForField = getComponentById(fieldName)
+                elementsHandler.setValue(getFromSession(fieldName), componentForField)
+            }
+        }
+    }
 
     private fun linkFieldToComponent(fieldName: String) {
         fun valueShouldBeSetOnComponent(component: Component) = page.getFieldValue(fieldName) != null && page.getFieldValue(fieldName) != elementsHandler.getValue(component)
@@ -157,7 +174,7 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
         }}
     }
 
-    private fun isThereComponentById(fieldName: String): Boolean = uiComponentToVaadinComponent.keys.any { it.id == fieldName}
+    fun isThereComponentById(fieldName: String): Boolean = uiComponentToVaadinComponent.keys.any { it.id == fieldName}
 
     fun getComponentById(fieldName: String): Component = vaadinComponentForUi(uiComponentToVaadinComponent.keys.first { it.id == fieldName })
 
@@ -244,11 +261,14 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
 
     private fun activateDataProvidersOnComponents() {
         page.pageController.dataProviders.forEach { dataProvider ->
+            if (dataProvider.dataProvider is AbstractDomainAwareDataProvider<*>) dataProvider.dataProvider.domain = page.pageDomain.dataClass
             elementsHandler.addDataProviderTo(getUIComponentById(dataProvider.forComponentId), getComponentById(dataProvider.forComponentId), dataProvider.dataProvider)
         }
     }
 
     companion object {
+        val keysInSession = mutableListOf<String>()
+
         fun showInUI(uiComponent: UIComponent) {
             when (uiComponent) {
                 is ModalWindow<*> -> elementsHandler.showModalWindow(uiComponent)
@@ -269,6 +289,16 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
         fun closeConfirmDialog() {
             elementsHandler.closeConfirmDialog()
         }
+
+        fun setInSession(key: String, value: Any) {
+            elementsHandler.setInSession(key, value)
+        }
+
+        fun removeFromSession(key: String) {
+            elementsHandler.removeFromSession(key)
+        }
+
+        fun getFromSession(key: String) = elementsHandler.getFromSession(key)
     }
 
 }
