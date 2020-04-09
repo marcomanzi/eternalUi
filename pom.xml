@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.cloud</groupId>
         <artifactId>spring-cloud-starter-parent</artifactId>
-        <version>Greenwich.SR3</version>
+        <version>Hoxton.SR3</version>
         <relativePath/>
     </parent>
     <groupId>com.github.marcomanzi</groupId>
@@ -45,7 +45,7 @@
         <!-- Frontend -->
         <node.version>v8.16.0</node.version>
         <yarn.version>v1.16.0</yarn.version>
-        <vaadin.version>14.1.22</vaadin.version>
+        <vaadin.version>14.1.25</vaadin.version>
         <maven.resources.plugin.version>3.0.2</maven.resources.plugin.version>
         <maven.surefire.plugin.version>2.21.0</maven.surefire.plugin.version>
         <frontend.maven.plugin.version>1.9.1</frontend.maven.plugin.version>
@@ -132,7 +132,7 @@
                 <dependency>
                     <groupId>com.vaadin</groupId>
                     <artifactId>flow-server-production-mode</artifactId>
-                    <version>2.1.6</version>
+                    <version>3.0.5</version>
                     <scope>provided</scope>
                 </dependency>
             </dependencies>
