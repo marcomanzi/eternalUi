@@ -257,6 +257,7 @@ class Vaadin14UiElementsHandler: VaadinElementsHandler {
                 UI.getCurrent().session.setAttribute(confirmDialogKeyInSession, this)
                 isCloseOnEsc = true
             }.open()
+            UI.getCurrent().addShortcutListener(ShortcutEventListener { closeTopModalWindow() } , Key.ESCAPE)
         }
     }
 

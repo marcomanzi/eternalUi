@@ -25,7 +25,7 @@ class ExampleFormOnlyForEntity(@Autowired var exampleFormOnlyForEntityController
 
 @Service
 class ExampleFormOnlyForEntityController(@Autowired var exampleFormOnlyForEntityBackend: ExampleFormOnlyForEntityBackend): PageController<ExampleFormOnlyForEntityDomain>(
-        actions = listOf(OnClickAction("saveExampleForm") { exampleFormOnlyForEntityBackend.saveAndCloseDialog(it) }))
+        actions = mutableListOf(OnClickAction("saveExampleForm") { exampleFormOnlyForEntityBackend.saveAndCloseDialog(it) }))
 
 data class ExampleFormOnlyForEntityDomain(val name: String = "", val surname: String = "", val age: Int = 18, val birthDate: LocalDate = LocalDate.now().minusYears(18), val description: String = "")
 

@@ -1,11 +1,11 @@
 package com.octopus.eternalUi.vaadinBridge
 
 import com.octopus.eternalUi.domain.*
+import com.octopus.eternalUi.domain.db.AbstractDataProvider
 import com.octopus.eternalUi.domain.db.AbstractDomainAwareDataProvider
 import com.octopus.eternalUi.domain.db.Identifiable
 import com.vaadin.flow.component.Component
 import com.vaadin.flow.component.HasComponents
-import com.vaadin.flow.component.HasElement
 import com.vaadin.flow.component.html.Div
 import com.vaadin.flow.router.BeforeEnterEvent
 import com.vaadin.flow.router.BeforeEnterObserver
@@ -65,6 +65,7 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
         uiComponentToVaadinComponent = createMapUIComponentToVaadinComponent(page.uiView)
         setInContainerComponentsChildren()
         addMainUIToView()
+        addConnectionBetweenControllerAndDomainBasedOnConvention(page)
         activateDataProvidersOnComponents()
         linkDataProviderFiltersToDomain()
         linkDomainToComponents()
@@ -192,6 +193,38 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
 
     private fun activateActionsOnComponents() {
         page.pageController.actions.forEach { activateActionOnPage(it) }
+    }
+
+    private fun addConnectionBetweenControllerAndDomainBasedOnConvention(page: Page<T>) {
+        uiComponentToVaadinComponent.keys.forEach {
+            val controller = page.pageController
+            val domain = page.pageDomain.dataClass.javaClass
+            controller.javaClass.methods.firstOrNull { m -> m.name == it.id + "DataProvider"}?.let { m ->
+                page.pageController.dataProviders.add(DataProvider(it.id, m.invoke(controller) as AbstractDataProvider<out Identifiable>))
+            }
+            controller.javaClass.methods.firstOrNull { m -> m.name == it.id + "Clicked"}?.let { m ->
+                page.pageController.actions.add(when {
+                    m.parameterTypes[0].name.endsWith("EternalUI") -> OnClickUIAction(it.id) { ui -> m.invoke(controller, ui) as EternalUI<T> }
+                    m.returnType.javaClass.name == domain.name -> OnClickAction(it.id) { ui -> m.invoke(controller, ui) as T }
+                    else -> OnClickReader(it.id) { ui -> m.invoke(controller, ui) }
+                })
+            }
+            controller.javaClass.methods.firstOrNull { m -> m.name == it.id + "Changed"}?.let { m ->
+                page.pageController.actions.add(when {
+                    m.returnType.javaClass.name == domain.name -> OnChangeAction(it.id) { ui -> m.invoke(controller, ui) as T }
+                    else -> OnChangeReader(it.id) { ui -> m.invoke(controller, ui) as T }
+                })
+            }
+//                class OnClickUIAction<T: Any>(_onComponentId: String, val onUIFunction: (EternalUI<T>) -> EternalUI<T>): Action<T>(_onComponentId)
+//                class OnClickAction<T: Any>(_onComponentId: String, val onDataDomainClassFunction: (T) -> T): Action<T>(_onComponentId)
+//                class OnClickReader<T: Any>(_onComponentId: String, val onDataDomainClassReader: (T) -> Unit): Action<T>(_onComponentId)
+//                class OnChangeAction<T: Any>(_onComponentId: String, val onDataDomainClassFunction: (T) -> T): Action<T>(_onComponentId)
+//                class OnChangeReader<T: Any>(_onComponentId: String, val onDataDomainClassReader: (T) -> Unit): Action<T>(_onComponentId)
+//                class DownloadAction<T: Any>(_onComponentId: String, val fileName: String, val onDataDomainInputStream: (T) -> InputStream): Action<T>(_onComponentId)
+
+
+        }
+
     }
 
     private fun activateActionOnPage(action: Action<T>) {

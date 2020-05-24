@@ -42,12 +42,12 @@ class UserSearchForm: HorizontalContainer("searchForm", Input("searchName", Text
 
 @Service
 class HomeController(@Autowired var homeBackend: HomeBackend): PageController<HomeDomain>(
-        actions = listOf(OnClickAction("Save") { homeBackend.saveUser(it) },
+        actions = mutableListOf(OnClickAction("Save") { homeBackend.saveUser(it) },
                 OnClickReader("save1000Users") { it.apply { homeBackend.save1000Users() }},
                 OnClickAction("usersGrid") { homeBackend.showUserForm(it)},
                 OnClickReader("downloadFile") { homeBackend.openFile(it)}),
-        enabledRules = listOf(EnabledRule("Save") { page -> page.hasValues("name")}),
-        dataProviders = listOf(DataProvider("usersGrid", homeBackend.userDataProvider,
+        enabledRules = mutableListOf(EnabledRule("Save") { page -> page.hasValues("name")}),
+        dataProviders = mutableListOf(DataProvider("usersGrid", homeBackend.userDataProvider,
                 OrRule(WasInteractedWith("Save"), WasInteractedWith("save1000Users")),"searchName"),
                 DataProvider("city", homeBackend.cityDataProvider))
 )

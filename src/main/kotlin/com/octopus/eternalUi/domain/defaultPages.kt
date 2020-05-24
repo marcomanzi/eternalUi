@@ -15,6 +15,6 @@ class ConfirmDialogPage(confirmDialog: ConfirmDialog = ConfirmDialog("noMessage"
 }
 
 class ConfirmDialogController(confirmDialog: ConfirmDialog): PageController<EmptyDomain>(
-        listOf(OnClickReader("okButton") { confirmDialog.onOk(); EternalUI.closeConfirmDialog() },
+        mutableListOf(OnClickReader("okButton") { confirmDialog.onOk(); EternalUI.closeConfirmDialog() },
                 OnClickReader("cancelButton") { confirmDialog.onCancel(); EternalUI.closeConfirmDialog() })
 )

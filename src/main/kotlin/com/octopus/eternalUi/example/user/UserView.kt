@@ -23,7 +23,7 @@ class UserForm(@Autowired val userFormController: UserFormController): Page<User
 
 @Service
 class UserFormController(@Autowired val userFormBackend: UserFormBackend): PageController<UserDomain> (
-        actions = listOf(OnClickAction("Save", { userFormBackend.save(it) }))
+        actions = mutableListOf(OnClickAction("Save", { userFormBackend.save(it) }))
 )
 
 data class UserDomain(val id: UUID = UUID.randomUUID(), val name: String = "")

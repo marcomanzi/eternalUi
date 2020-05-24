@@ -11,7 +11,6 @@ package com.octopus.eternalUi.example
  import org.springframework.core.io.ClassPathResource
  import org.springframework.stereotype.Component
  import org.springframework.stereotype.Service
- import java.io.FileInputStream
  import java.util.*
 
 @Route("exampleUI")
@@ -36,44 +35,36 @@ class ExampleForm(@Autowired var exampleFormController: ExampleFormController): 
         PageDomain(ExampleFormDomain()))
 
 @Service
-class ExampleFormController(@Autowired var exampleFormBackend: ExampleFormBackend): PageController<ExampleFormDomain>(
-        dataProviders = listOf(DataProvider("listBasedGrid", exampleFormBackend.listDataProvider)),
-        actions = listOf(
-                OnClickUIAction("addElementToGrid") { exampleFormBackend.addElementToGrid(it) },
-                OnClickAction("openDialog") { exampleFormBackend.openDialog(it) },
-                OnClickAction("openDialogWithValues") { exampleFormBackend.openDialogWithValues(it) },
-                OnClickAction("openConfirmDialog") { exampleFormBackend.openConfirmDialog(it) },
-                OnClickAction("navigateToHome") { exampleFormBackend.navigateToHome(it) },
-                DownloadAction("downloadCsv", "test.csv") { ClassPathResource("testFile.csv").inputStream }))
+class ExampleFormController: PageController<ExampleFormDomain>(
+        actions = mutableListOf(DownloadAction("downloadCsv", "test.csv") { ClassPathResource("testFile.csv").inputStream })) {
+    val listDataProvider: ListDataProvider<GridBean> = ListDataProvider(GridBean("Marco", "Manzi"), GridBean("Francesco", "Manzi"))
+    @Autowired lateinit var entityFormOnlyForEntity: ExampleFormOnlyForEntity
+
+    fun listBasedGridDataProvider() = listDataProvider
+
+    fun openDialogClicked(exampleFormDomain: ExampleFormDomain) = exampleFormDomain.apply {
+        EternalUI.showInUI(ModalWindow("modalExample1", entityFormOnlyForEntity.withEntity(ExampleFormOnlyForEntityDomain()), _cssClassName = "exampleDialogCssClass"))
+    }
+
+    fun openDialogWithValuesClicked(exampleFormDomain: ExampleFormDomain) = exampleFormDomain.apply {
+        EternalUI.showInUI(ModalWindow("modalExample2", entityFormOnlyForEntity.withEntity(ExampleFormOnlyForEntityDomain("Test Start Name"))))
+    }
+
+    fun navigateToHomeClicked(exampleFormDomain: ExampleFormDomain): ExampleFormDomain = exampleFormDomain.apply {
+        EternalUI.navigateTo(HomeView::class.java, HomeDomain("Test Input From Example View"))
+    }
+
+    fun openConfirmDialogClicked(it: ExampleFormDomain): ExampleFormDomain = it.apply {
+        EternalUI.showInUI(ConfirmDialog("This is a test confirm dialog", { EternalUI.showInUI(UserMessage("You clicked ok")) }, { EternalUI.showInUI(UserMessage("You clicked cancel")) }))
+    }
+
+    fun addElementToGridClicked(it: EternalUI<ExampleFormDomain>): EternalUI<ExampleFormDomain> = it.refreshItemsAfterAction("listBasedGrid") {
+        listDataProvider.elements.add(GridBean("New" + UUID.randomUUID().toString(), "Surname"))
+    }
+}
 
 data class ExampleFormDomain(val name: String = "")
 
 data class GridBean(val name: String, val surname: String): Identifiable {
     override fun getUiId(): String = UUID.randomUUID().toString()
-}
-
-@Service
-class ExampleFormBackend {
-    val listDataProvider: ListDataProvider<GridBean> = ListDataProvider(GridBean("Marco", "Manzi"), GridBean("Francesco", "Manzi"))
-    @Autowired lateinit var entityFormOnlyForEntity: ExampleFormOnlyForEntity
-
-    fun openDialog(exampleFormDomain: ExampleFormDomain) = exampleFormDomain.apply {
-        EternalUI.showInUI(ModalWindow("modalExample1", entityFormOnlyForEntity.withEntity(ExampleFormOnlyForEntityDomain()), _cssClassName = "exampleDialogCssClass"))
-    }
-
-    fun openDialogWithValues(exampleFormDomain: ExampleFormDomain) = exampleFormDomain.apply {
-        EternalUI.showInUI(ModalWindow("modalExample2", entityFormOnlyForEntity.withEntity(ExampleFormOnlyForEntityDomain("Test Start Name"))))
-    }
-
-    fun navigateToHome(exampleFormDomain: ExampleFormDomain): ExampleFormDomain = exampleFormDomain.apply {
-        EternalUI.navigateTo(HomeView::class.java, HomeDomain("Test Input From Example View"))
-    }
-
-    fun openConfirmDialog(it: ExampleFormDomain): ExampleFormDomain = it.apply {
-        EternalUI.showInUI(ConfirmDialog("This is a test confirm dialog", { EternalUI.showInUI(UserMessage("You clicked ok")) }, { EternalUI.showInUI(UserMessage("You clicked cancel")) }))
-    }
-
-    fun addElementToGrid(it: EternalUI<ExampleFormDomain>): EternalUI<ExampleFormDomain> = it.refreshItemsAfterAction("listBasedGrid") {
-        listDataProvider.elements.add(GridBean("New" + UUID.randomUUID().toString(), "Surname"))
-    }
 }
