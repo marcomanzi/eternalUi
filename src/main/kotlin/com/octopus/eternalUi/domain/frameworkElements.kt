@@ -4,6 +4,7 @@ import com.octopus.eternalUi.domain.db.Identifiable
 import com.octopus.eternalUi.vaadinBridge.EternalUI
 
 interface UIDomain
+interface UIBackend
 interface UIPresenter
 interface Rule<T: Any>
 
@@ -15,13 +16,23 @@ abstract class UIComponent(val id: String, var cssClassName: String, val contain
     }
 }
 
-open class PageController<T: Any>(val actions: List<Action<T>> = listOf(),
-                                  val enabledRules: List<Rule<T>> = listOf(),
-                                  val dataProviders: List<DataProvider<out Identifiable>> = listOf()): UIPresenter
+open class PageController<T: Any>(val actions: MutableList<Action<T>> = mutableListOf(),
+                                  val enabledRules: MutableList<Rule<T>> = mutableListOf(),
+                                  val dataProviders: MutableList<DataProvider<out Identifiable>> = mutableListOf()): UIPresenter
 
 open class PageDomain<T: Any>(val dataClass: T):UIDomain
 
-open class DataProvider<T: Identifiable>(val forComponentId: String, val dataProvider: com.octopus.eternalUi.domain.db.DataProvider<T>,
-                                         val refreshRule: Rule<T> = NoRule(), vararg val filterIds: String) {
+open class PageBackend<T: Any>: UIBackend
+
+open class DataProvider<T: Identifiable>(val forComponentId: String = "", val dataProvider: com.octopus.eternalUi.domain.db.DataProvider<T>,
+                                         val refreshRule: Rule<out Identifiable> = NoRule(), vararg val filterIds: String) {
     fun applyFilterValueToDataProvider(filterId: String, filterValue: Any) = dataProvider.addFilter(filterId, filterValue)
+
+    companion object {
+        fun <T: Identifiable> definition(dataProvider: com.octopus.eternalUi.domain.db.DataProvider<T>, vararg filterIds: String):DataProvider<T> =
+                DataProvider("", dataProvider, NoRule(), *filterIds)
+
+        fun <T: Identifiable> definition(dataProvider: com.octopus.eternalUi.domain.db.DataProvider<T>, refreshRule: Rule<T>, vararg filterIds: String):DataProvider<T> =
+                DataProvider("", dataProvider, refreshRule, *filterIds)
+    }
 }

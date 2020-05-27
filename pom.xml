@@ -5,12 +5,12 @@
     <parent>
         <groupId>org.springframework.cloud</groupId>
         <artifactId>spring-cloud-starter-parent</artifactId>
-        <version>Greenwich.SR3</version>
+        <version>Hoxton.SR3</version>
         <relativePath/>
     </parent>
     <groupId>com.github.marcomanzi</groupId>
     <artifactId>eternalUi</artifactId>
-    <version>1.1.4</version>
+    <version>1.1.5</version>
     <name>eternalUi</name>
     <packaging>jar</packaging>
     <url>https://github.com/marcomanzi/eternalUi</url>
@@ -39,13 +39,13 @@
         <java.source>${java.version}</java.source>
         <java.target>${java.version}</java.target>
         <java.release>${java.version}</java.release>
-        <kotlin.version>1.3.60</kotlin.version>
+        <kotlin.version>1.3.72</kotlin.version>
         <spring-cloud.version>Greenwich.SR3</spring-cloud.version>
 
         <!-- Frontend -->
         <node.version>v8.16.0</node.version>
         <yarn.version>v1.16.0</yarn.version>
-        <vaadin.version>14.1.18</vaadin.version>
+        <vaadin.version>14.1.25</vaadin.version>
         <maven.resources.plugin.version>3.0.2</maven.resources.plugin.version>
         <maven.surefire.plugin.version>2.21.0</maven.surefire.plugin.version>
         <frontend.maven.plugin.version>1.9.1</frontend.maven.plugin.version>
@@ -109,6 +109,17 @@
             <version>2.4.0</version>
             <scope>runtime</scope>
         </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib</artifactId>
+            <version>${kotlin.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-test</artifactId>
+            <version>${kotlin.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <dependencyManagement>
@@ -132,7 +143,7 @@
                 <dependency>
                     <groupId>com.vaadin</groupId>
                     <artifactId>flow-server-production-mode</artifactId>
-                    <version>2.1.6</version>
+                    <version>3.0.5</version>
                     <scope>provided</scope>
                 </dependency>
             </dependencies>
@@ -254,8 +265,51 @@
     </profiles>
     <build>
         <finalName>eternal-ui</finalName>
-        <sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>
-        <testSourceDirectory>${project.basedir}/src/test/kotlin</testSourceDirectory>
+        <plugins>
+            <plugin>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-maven-plugin</artifactId>
+                <version>${kotlin.version}</version>
+                <executions>
+                    <execution>
+                        <id>compile</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>test-compile</id>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>test-compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>compile</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>testCompile</id>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+        <sourceDirectory>src/main/kotlin</sourceDirectory>
+        <testSourceDirectory>src/test/kotlin</testSourceDirectory>
         <pluginManagement>
             <plugins>
                 <plugin>

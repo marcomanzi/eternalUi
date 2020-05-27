@@ -21,6 +21,7 @@ import com.vaadin.flow.component.tabs.Tabs
 import com.vaadin.flow.component.textfield.*
 import com.vaadin.flow.data.value.ValueChangeMode
 import com.vaadin.flow.router.RouterLink
+import com.vaadin.flow.server.Attributes
 import com.vaadin.flow.server.InputStreamFactory
 import com.vaadin.flow.server.StreamResource
 import java.math.BigDecimal
@@ -198,7 +199,7 @@ class Vaadin14UiElementsHandler: VaadinElementsHandler {
     }
 
     override fun <T : Any> addDownloadInputStream(action: DownloadAction<T>, domain: T, componentById: Component) {
-        (componentById as Anchor).setHref(StreamResource(action.fileName, InputStreamFactory { action.onDataDomainInputStream(domain) }))
+        (componentById as Anchor).setHref(StreamResource(action.fileNameGenerator(domain), InputStreamFactory { action.onDataDomainInputStream(domain) }))
     }
 
     override fun addDataProviderTo(uiComponent: UIComponent, component: Component, dataProvider: com.octopus.eternalUi.domain.db.DataProvider<out Identifiable>) {
@@ -256,6 +257,7 @@ class Vaadin14UiElementsHandler: VaadinElementsHandler {
                 UI.getCurrent().session.setAttribute(confirmDialogKeyInSession, this)
                 isCloseOnEsc = true
             }.open()
+            UI.getCurrent().addShortcutListener(ShortcutEventListener { closeTopModalWindow() } , Key.ESCAPE)
         }
     }
 
@@ -293,7 +295,5 @@ class Vaadin14UiElementsHandler: VaadinElementsHandler {
         UI.getCurrent().session.setAttribute(key, null)
     }
 
-    override fun getFromSession(key: String): Any? {
-        return UI.getCurrent().session.getAttribute(key)
-    }
+    override fun getFromSession(key: String): Any? = UI.getCurrent().session.getAttribute(key)
 }
