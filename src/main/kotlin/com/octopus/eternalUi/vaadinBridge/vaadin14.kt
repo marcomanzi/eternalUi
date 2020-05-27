@@ -199,7 +199,7 @@ class Vaadin14UiElementsHandler: VaadinElementsHandler {
     }
 
     override fun <T : Any> addDownloadInputStream(action: DownloadAction<T>, domain: T, componentById: Component) {
-        (componentById as Anchor).setHref(StreamResource(action.fileName, InputStreamFactory { action.onDataDomainInputStream(domain) }))
+        (componentById as Anchor).setHref(StreamResource(action.fileNameGenerator(domain), InputStreamFactory { action.onDataDomainInputStream(domain) }))
     }
 
     override fun addDataProviderTo(uiComponent: UIComponent, component: Component, dataProvider: com.octopus.eternalUi.domain.db.DataProvider<out Identifiable>) {

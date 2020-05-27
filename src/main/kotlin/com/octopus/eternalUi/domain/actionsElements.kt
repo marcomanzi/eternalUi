@@ -9,4 +9,4 @@ class OnClickAction<T: Any>(_onComponentId: String, val onDataDomainClassFunctio
 class OnClickReader<T: Any>(_onComponentId: String, val onDataDomainClassReader: (T) -> Unit): Action<T>(_onComponentId)
 class OnChangeAction<T: Any>(_onComponentId: String, val onDataDomainClassFunction: (T) -> T): Action<T>(_onComponentId)
 class OnChangeReader<T: Any>(_onComponentId: String, val onDataDomainClassReader: (T) -> Unit): Action<T>(_onComponentId)
-class DownloadAction<T: Any>(_onComponentId: String, val fileName: String, val onDataDomainInputStream: (T) -> InputStream): Action<T>(_onComponentId)
+class DownloadAction<T: Any>(_onComponentId: String, val fileNameGenerator: (T) -> String, val onDataDomainInputStream: (T) -> InputStream): Action<T>(_onComponentId)

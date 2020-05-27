@@ -24,7 +24,15 @@ open class PageDomain<T: Any>(val dataClass: T):UIDomain
 
 open class PageBackend<T: Any>: UIBackend
 
-open class DataProvider<T: Identifiable>(val forComponentId: String, val dataProvider: com.octopus.eternalUi.domain.db.DataProvider<T>,
-                                         val refreshRule: Rule<T> = NoRule(), vararg val filterIds: String) {
+open class DataProvider<T: Identifiable>(val forComponentId: String = "", val dataProvider: com.octopus.eternalUi.domain.db.DataProvider<T>,
+                                         val refreshRule: Rule<out Identifiable> = NoRule(), vararg val filterIds: String) {
     fun applyFilterValueToDataProvider(filterId: String, filterValue: Any) = dataProvider.addFilter(filterId, filterValue)
+
+    companion object {
+        fun <T: Identifiable> definition(dataProvider: com.octopus.eternalUi.domain.db.DataProvider<T>, vararg filterIds: String):DataProvider<T> =
+                DataProvider("", dataProvider, NoRule(), *filterIds)
+
+        fun <T: Identifiable> definition(dataProvider: com.octopus.eternalUi.domain.db.DataProvider<T>, refreshRule: Rule<T>, vararg filterIds: String):DataProvider<T> =
+                DataProvider("", dataProvider, refreshRule, *filterIds)
+    }
 }

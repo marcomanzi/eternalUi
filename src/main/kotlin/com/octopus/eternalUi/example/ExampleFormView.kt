@@ -11,7 +11,9 @@ package com.octopus.eternalUi.example
  import org.springframework.core.io.ClassPathResource
  import org.springframework.stereotype.Component
  import org.springframework.stereotype.Service
+ import java.io.InputStream
  import java.util.*
+ import java.util.function.BiFunction
 
 @Route("exampleUI")
 @UIScope
@@ -24,6 +26,7 @@ class ExampleForm(@Autowired var exampleFormController: ExampleFormController): 
         VerticalContainer("exampleFormContainer",
                 Label("Example Eternal UI Application", "h1"),
                 Label("A simple UI with a grid, and a CRUD on the grid entity", "h3"),
+                Input("name"),
                 Grid("listBasedGrid", GridBean::class, listOf("name", "surname")),
                 Button("addElementToGrid", caption = "Example Button that add a bean to the grid"),
                 Button("openDialog", caption = "Example Button that open a dialog"),
@@ -35,12 +38,13 @@ class ExampleForm(@Autowired var exampleFormController: ExampleFormController): 
         PageDomain(ExampleFormDomain()))
 
 @Service
-class ExampleFormController: PageController<ExampleFormDomain>(
-        actions = mutableListOf(DownloadAction("downloadCsv", "test.csv") { ClassPathResource("testFile.csv").inputStream })) {
-    val listDataProvider: ListDataProvider<GridBean> = ListDataProvider(GridBean("Marco", "Manzi"), GridBean("Francesco", "Manzi"))
+class ExampleFormController: PageController<ExampleFormDomain>() {
+    val listDataProvider: ListDataProvider<GridBean> = ListDataProvider(BiFunction { v, filters ->  !filters.containsKey("name") ||
+            v.name.toLowerCase().contains(filters["name"].toString().toLowerCase())},
+            GridBean("Marco", "Manzi"), GridBean("Francesco", "Manzi"))
     @Autowired lateinit var entityFormOnlyForEntity: ExampleFormOnlyForEntity
 
-    fun listBasedGridDataProvider() = listDataProvider
+    fun listBasedGridDataProvider() = DataProvider.definition(listDataProvider, "name")
 
     fun openDialogClicked(exampleFormDomain: ExampleFormDomain) = exampleFormDomain.apply {
         EternalUI.showInUI(ModalWindow("modalExample1", entityFormOnlyForEntity.withEntity(ExampleFormOnlyForEntityDomain()), _cssClassName = "exampleDialogCssClass"))
@@ -61,6 +65,9 @@ class ExampleFormController: PageController<ExampleFormDomain>(
     fun addElementToGridClicked(it: EternalUI<ExampleFormDomain>): EternalUI<ExampleFormDomain> = it.refreshItemsAfterAction("listBasedGrid") {
         listDataProvider.elements.add(GridBean("New" + UUID.randomUUID().toString(), "Surname"))
     }
+
+    fun downloadCsvClicked(it: ExampleFormDomain): Pair<(ExampleFormDomain) -> String, (ExampleFormDomain) -> InputStream> =
+            Pair<(ExampleFormDomain) -> String, (ExampleFormDomain) -> InputStream>({ "test.csv"}, { ClassPathResource("testFile.csv").inputStream })
 }
 
 data class ExampleFormDomain(val name: String = "")

@@ -9,6 +9,7 @@ import com.vaadin.flow.component.HasComponents
 import com.vaadin.flow.component.html.Div
 import com.vaadin.flow.router.BeforeEnterEvent
 import com.vaadin.flow.router.BeforeEnterObserver
+import java.io.InputStream
 
 interface VaadinElementsHandler {
     fun cleanView(component: Component)
@@ -200,10 +201,18 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
             val controller = page.pageController
             val domain = page.pageDomain.dataClass.javaClass
             controller.javaClass.methods.firstOrNull { m -> m.name == it.id + "DataProvider"}?.let { m ->
-                page.pageController.dataProviders.add(DataProvider(it.id, m.invoke(controller) as AbstractDataProvider<out Identifiable>))
+                page.pageController.dataProviders.add(when {
+                    m.returnType.javaClass.isInstance(DataProvider::class.java) -> (m.invoke(controller) as DataProvider<out Identifiable>).let { dp ->
+                        return@let DataProvider(it.id, dp.dataProvider, dp.refreshRule, *dp.filterIds)
+                    }
+                    else -> DataProvider(it.id, m.invoke(controller) as AbstractDataProvider<out Identifiable>)
+                })
             }
             controller.javaClass.methods.firstOrNull { m -> m.name == it.id + "Clicked"}?.let { m ->
                 page.pageController.actions.add(when {
+                    it is DownloadButton -> (m.invoke(controller, page.pageDomain.dataClass) as Pair<(T) -> String, (T) -> InputStream>).let { pair ->
+                        DownloadAction(it.id, pair.first, pair.second)
+                    }
                     m.parameterTypes[0].name.endsWith("EternalUI") -> OnClickUIAction(it.id) { ui -> m.invoke(controller, ui) as EternalUI<T> }
                     m.returnType.javaClass.name == domain.name -> OnClickAction(it.id) { ui -> m.invoke(controller, ui) as T }
                     else -> OnClickReader(it.id) { ui -> m.invoke(controller, ui) }
@@ -215,14 +224,6 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
                     else -> OnChangeReader(it.id) { ui -> m.invoke(controller, ui) as T }
                 })
             }
-//                class OnClickUIAction<T: Any>(_onComponentId: String, val onUIFunction: (EternalUI<T>) -> EternalUI<T>): Action<T>(_onComponentId)
-//                class OnClickAction<T: Any>(_onComponentId: String, val onDataDomainClassFunction: (T) -> T): Action<T>(_onComponentId)
-//                class OnClickReader<T: Any>(_onComponentId: String, val onDataDomainClassReader: (T) -> Unit): Action<T>(_onComponentId)
-//                class OnChangeAction<T: Any>(_onComponentId: String, val onDataDomainClassFunction: (T) -> T): Action<T>(_onComponentId)
-//                class OnChangeReader<T: Any>(_onComponentId: String, val onDataDomainClassReader: (T) -> Unit): Action<T>(_onComponentId)
-//                class DownloadAction<T: Any>(_onComponentId: String, val fileName: String, val onDataDomainInputStream: (T) -> InputStream): Action<T>(_onComponentId)
-
-
         }
 
     }
