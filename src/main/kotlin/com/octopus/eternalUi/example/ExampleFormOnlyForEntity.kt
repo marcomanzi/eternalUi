@@ -9,12 +9,12 @@ import java.time.LocalDate
 
 @Component
 class ExampleFormOnlyForEntity(@Autowired var exampleFormOnlyForEntityController: ExampleFormOnlyForEntityController): Page<ExampleFormOnlyForEntityDomain>(
-        VerticalContainer("exampleFormOnlyForEntityContainer",
+        VerticalContainer(
                 Label("Example Eternal UI Simple Form", "h1"),
-                HorizontalContainer("firstLine", Input("name", InputType.Text), Input("surname", InputType.Text)),
-                HorizontalContainer("secondLine", InputNumber("age", InputNumberType.Integer, min = 0, max = 100), Input("birthDate", InputType.Date)),
-                HorizontalContainer("thirdLine", InputNumber("pocketAmount", InputNumberType.Currency), InputNumber("conversionRate", step = 2)),
-                HorizontalContainer("forthLine", Input("description", InputType.TextArea)),
+                HorizontalContainer(Input("name", InputType.Text), Input("surname", InputType.Text)),
+                HorizontalContainer(InputNumber("age", InputNumberType.Integer, min = 0, max = 100), Input("birthDate", InputType.Date)),
+                HorizontalContainer(InputNumber("pocketAmount", InputNumberType.Currency), InputNumber("conversionRate", step = 2)),
+                HorizontalContainer(Input("description", InputType.TextArea)),
                 Button("saveExampleForm", caption = "Example Save And Close Dialog")),
         exampleFormOnlyForEntityController,
         PageDomain(ExampleFormOnlyForEntityDomain())) {

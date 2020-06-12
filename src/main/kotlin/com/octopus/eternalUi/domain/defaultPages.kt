@@ -4,9 +4,9 @@ import com.octopus.eternalUi.vaadinBridge.EternalUI
 
 class ConfirmDialogPage(confirmDialog: ConfirmDialog = ConfirmDialog("noMessage", {}),
                         confirmDialogController: ConfirmDialogController = ConfirmDialogController(confirmDialog)): Page<EmptyDomain>(
-        VerticalContainer("confirmDialogContainer",
+        VerticalContainer(
                 Label(confirmDialog.message, "h1"),
-                HorizontalContainer("buttonsContainer",
+                HorizontalContainer(
                         Button("okButton", "okButton", confirmDialog.message),
                         Button("cancelButton", "cancelButton", confirmDialog.cancelMessage)
                 )),

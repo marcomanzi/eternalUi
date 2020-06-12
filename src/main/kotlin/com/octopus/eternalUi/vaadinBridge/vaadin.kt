@@ -10,6 +10,7 @@ import com.vaadin.flow.component.html.Div
 import com.vaadin.flow.router.BeforeEnterEvent
 import com.vaadin.flow.router.BeforeEnterObserver
 import java.io.InputStream
+import java.lang.reflect.Method
 
 interface VaadinElementsHandler {
     fun cleanView(component: Component)
@@ -35,16 +36,19 @@ interface VaadinElementsHandler {
     fun showUserMessage(userMessage: UserMessage)
     fun closeTopModalWindow()
     fun navigateTo(uiComponent: Class<out Component>)
-    fun setInSession(key: String, it: Any)
+    fun setInSession(key: String, value: Any)
     fun getFromSession(key: String): Any?
     fun removeFromSession(domainSessionKey: String): Any
     fun showConfirmDialog(confirmDialog: ConfirmDialog)
     fun closeConfirmDialog()
     fun <T: Any> addDownloadInputStream(action: DownloadAction<T>, domain: T, componentById: Component)
     fun getMainComponentFor(componentById: Component): Component
+    fun switchCaptionTo(component: Component, newCaption: String)
+    fun showFileInDifferentTab(file: File)
+    fun reloadPage()
 }
 
-val elementsHandler = Vaadin14UiElementsHandler()
+val elementsHandler = Vaadin15UiElementsHandler()
 const val domain_session_key = "domain_session_key"
 @Suppress("UNCHECKED_CAST")
 open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
@@ -89,7 +93,7 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
     }
 
     private fun addDebugButton() {
-        if (debugModeActive) elementsHandler.addToParent(vaadinComponentForUi(page.uiView), elementsHandler.debugButton { page.toDebugString() })
+        if (debugModeActive && page.pageDomain.dataClass !is EmptyDomain) elementsHandler.addToParent(vaadinComponentForUi(page.uiView), elementsHandler.debugButton { page.toDebugString() })
     }
 
     private fun createMapUIComponentToVaadinComponent(uiComponent: UIComponent): Map<UIComponent, Component> {
@@ -152,14 +156,14 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
         }
     }
 
-    private fun linkDataProviderFiltersToComponents() = page.pageController.dataProviders.forEach { it.filterIds.forEach { filterId -> linkFieldToFilters(filterId) } }
+    private fun linkDataProviderFiltersToComponents() = page.pageController.uiDataProviders.forEach { it.filterIds.forEach { filterId -> linkFieldToFilters(filterId) } }
 
     private fun linkFieldToFilters(fieldName: String) {
         try {
             if (isThereComponentById(fieldName)) {
                 val componentById = getComponentById(fieldName)
                 elementsHandler.addValueChangeListener(componentById) { value ->
-                    page.pageController.dataProviders.forEach {
+                    page.pageController.uiDataProviders.forEach {
                         it.applyFilterValueToDataProvider(fieldName, value)
                         elementsHandler.refresh(getComponentById(it.forComponentId))
                     }
@@ -171,7 +175,7 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
     }
 
     private fun linkDataProviderFiltersToDomain() {
-        page.pageController.dataProviders.forEach { it.filterIds.forEach { filterId ->
+        page.pageController.uiDataProviders.forEach { it.filterIds.forEach { filterId ->
             page.getFieldValue(filterId)?.let { value -> it.applyFilterValueToDataProvider(filterId, value) }
         }}
     }
@@ -200,32 +204,39 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
         uiComponentToVaadinComponent.keys.forEach {
             val controller = page.pageController
             val domain = page.pageDomain.dataClass.javaClass
-            controller.javaClass.methods.firstOrNull { m -> m.name == it.id + "DataProvider"}?.let { m ->
-                page.pageController.dataProviders.add(when {
-                    m.returnType.javaClass.isInstance(DataProvider::class.java) -> (m.invoke(controller) as DataProvider<out Identifiable>).let { dp ->
-                        return@let DataProvider(it.id, dp.dataProvider, dp.refreshRule, *dp.filterIds)
-                    }
-                    else -> DataProvider(it.id, m.invoke(controller) as AbstractDataProvider<out Identifiable>)
-                })
-            }
-            controller.javaClass.methods.firstOrNull { m -> m.name == it.id + "Clicked"}?.let { m ->
-                page.pageController.actions.add(when {
-                    it is DownloadButton -> (m.invoke(controller, page.pageDomain.dataClass) as Pair<(T) -> String, (T) -> InputStream>).let { pair ->
-                        DownloadAction(it.id, pair.first, pair.second)
-                    }
-                    m.parameterTypes[0].name.endsWith("EternalUI") -> OnClickUIAction(it.id) { ui -> m.invoke(controller, ui) as EternalUI<T> }
-                    m.returnType.javaClass.name == domain.name -> OnClickAction(it.id) { ui -> m.invoke(controller, ui) as T }
-                    else -> OnClickReader(it.id) { ui -> m.invoke(controller, ui) }
-                })
-            }
-            controller.javaClass.methods.firstOrNull { m -> m.name == it.id + "Changed"}?.let { m ->
-                page.pageController.actions.add(when {
-                    m.returnType.javaClass.name == domain.name -> OnChangeAction(it.id) { ui -> m.invoke(controller, ui) as T }
-                    else -> OnChangeReader(it.id) { ui -> m.invoke(controller, ui) as T }
-                })
-            }
+            createActionsDataProviderFromMethods(controller, it, page, domain)
+            createActionsDataProviderFromMethods(page, it, page, domain)
         }
+    }
 
+    private fun createActionsDataProviderFromMethods(controller: Any, it: UIComponent, page: Page<T>, domain: Class<T>) {
+        fun MutableList<UiDataProvider<out Identifiable>>.addWithCheck(toAdd: UiDataProvider<out Identifiable>) { if (this.none { it.id == toAdd.id }) this.add(toAdd) }
+        fun MutableList<Action<T>>.addWithCheck(toAdd: Action<T>) { if (this.none { it.id == toAdd.id }) this.add(toAdd) }
+        fun methodActionDataProviderId(m: Method, componentId: String) = "${m.name}-$componentId"
+        controller.javaClass.methods.firstOrNull { m -> m.name == it.id + "DataProvider" }?.let { m ->
+            page.pageController.uiDataProviders.addWithCheck(when {
+                m.returnType.name == UiDataProvider::class.java.name -> (m.invoke(controller) as UiDataProvider<out Identifiable>).let { dp ->
+                    return@let UiDataProvider(it.id, dp.dataProvider, dp.refreshRule, *dp.filterIds, methodActionDataProviderId(m, it.id))
+                }
+                else -> UiDataProvider(it.id, m.invoke(controller) as AbstractDataProvider<out Identifiable>, id = methodActionDataProviderId(m, it.id))
+            })
+        }
+        controller.javaClass.methods.firstOrNull { m -> m.name == it.id + "Clicked" }?.let { m ->
+            page.pageController.actions.addWithCheck(when {
+                it is DownloadButton -> (m.invoke(controller, page.pageDomain.dataClass) as Pair<(T) -> String, (T) -> InputStream>).let { pair ->
+                    DownloadAction(it.id, pair.first, pair.second, methodActionDataProviderId(m, it.id))
+                }
+                m.parameterTypes[0].name.endsWith("EternalUI") -> OnClickUIAction(it.id, methodActionDataProviderId(m, it.id)) { ui -> m.invoke(controller, ui) as EternalUI<T> }
+                m.returnType.name == domain.name -> OnClickAction(it.id, methodActionDataProviderId(m, it.id)) { ui -> m.invoke(controller, ui) as T }
+                else -> OnClickReader(it.id, methodActionDataProviderId(m, it.id)) { ui -> m.invoke(controller, ui) }
+            })
+        }
+        controller.javaClass.methods.firstOrNull { m -> m.name == it.id + "Changed" }?.let { m ->
+            page.pageController.actions.addWithCheck(when {
+                m.returnType.name == domain.name -> OnChangeAction(it.id, methodActionDataProviderId(m, it.id)) { ui -> m.invoke(controller, ui) as T }
+                else -> OnChangeReader(it.id, methodActionDataProviderId(m, it.id)) { ui -> m.invoke(controller, ui) as T }
+            })
+        }
     }
 
     private fun activateActionOnPage(action: Action<T>) {
@@ -256,13 +267,13 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
             }
         }
 
-        fun <T: Identifiable> refreshComponentsForDataProvider(it: DataProvider<T>) {
+        fun <T: Identifiable> refreshComponentsForDataProvider(it: UiDataProvider<T>) {
             if (ruleIsTrue(it.refreshRule)) elementsHandler.refresh(getComponentById(it.forComponentId))
         }
 
         fun refreshAfter(f: () -> Unit) {
             f.invoke()
-            page.pageController.dataProviders.forEach { refreshComponentsForDataProvider(it) }
+            page.pageController.uiDataProviders.forEach { refreshComponentsForDataProvider(it) }
         }
         return { refreshAfter(it) }
     }
@@ -294,10 +305,14 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
     }
 
     private fun activateDataProvidersOnComponents() {
-        page.pageController.dataProviders.forEach { dataProvider ->
+        page.pageController.uiDataProviders.forEach { dataProvider ->
             if (dataProvider.dataProvider is AbstractDomainAwareDataProvider<*>) dataProvider.dataProvider.domain = page.pageDomain.dataClass
             elementsHandler.addDataProviderTo(getUIComponentById(dataProvider.forComponentId), getComponentById(dataProvider.forComponentId), dataProvider.dataProvider)
         }
+    }
+
+    fun switchCaptionTo(componentId: String, newCaption: String) {
+        elementsHandler.switchCaptionTo(getComponentById(componentId), newCaption)
     }
 
     companion object {
@@ -308,6 +323,7 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
                 is ModalWindow<*> -> elementsHandler.showModalWindow(uiComponent)
                 is UserMessage -> elementsHandler.showUserMessage(uiComponent)
                 is ConfirmDialog -> elementsHandler.showConfirmDialog(uiComponent)
+                is File -> elementsHandler.showFileInDifferentTab(uiComponent)
             }
         }
 
@@ -333,6 +349,10 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
         }
 
         fun getFromSession(key: String) = elementsHandler.getFromSession(key)
+
+        fun reloadPage() {
+            elementsHandler.reloadPage()
+        }
     }
 
 }
