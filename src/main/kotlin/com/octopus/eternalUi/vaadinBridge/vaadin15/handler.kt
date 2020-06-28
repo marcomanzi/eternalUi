@@ -40,7 +40,7 @@ class ComponentHandler {
                 is com.vaadin.flow.component.grid.Grid<*> ->
                     if (fieldValue == null) componentById.deselectAll()
                     else if (fieldValue is Optional<*> && fieldValue.isPresent) {
-                        (componentById as com.vaadin.flow.component.grid.Grid<Any>).select(fieldValue.get())
+                        (componentById as com.vaadin.flow.component.grid.Grid<Any?>).select(fieldValue.get())
                     }
                 is RadioButtonGroup<*> -> componentById.value = Message(fieldValue.toString())
                 is Checkbox -> componentById.value = fieldValue.toString().toBoolean()

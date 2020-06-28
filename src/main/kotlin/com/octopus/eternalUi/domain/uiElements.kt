@@ -6,9 +6,9 @@ import java.io.InputStream
 import java.util.*
 import kotlin.reflect.KClass
 
-open class VerticalContainer(vararg children: UIComponent, _id: String = UUID.randomUUID().toString(), _cssClassName: String = ""): UIComponent(_id, _cssClassName, containedUIComponents = children.asList())
-open class HorizontalContainer(vararg children: UIComponent, _id: String = UUID.randomUUID().toString(), _cssClassName: String = ""): UIComponent(_id, _cssClassName, containedUIComponents = children.asList())
-open class TabsContainer(vararg children: Tab<*>, _id: String = UUID.randomUUID().toString(), _cssClassName: String = ""): UIComponent(_id, _cssClassName, containedUIComponents = children.asList())
+open class VerticalContainer(vararg children: UIComponent, _id: String = UUID.randomUUID().toString(), _cssClassName: String = ""): UIComponent(_id, _cssClassName, containedUIComponents = children.asList().toMutableList())
+open class HorizontalContainer(vararg children: UIComponent, _id: String = UUID.randomUUID().toString(), _cssClassName: String = ""): UIComponent(_id, _cssClassName, containedUIComponents = children.asList().toMutableList())
+open class TabsContainer(vararg children: Tab<*>, _id: String = UUID.randomUUID().toString(), _cssClassName: String = ""): UIComponent(_id, _cssClassName, containedUIComponents = children.asList().toMutableList())
 open class Tab<T: Any>(val caption: String, val page: Page<T>, _id: String = UUID.randomUUID().toString(), _cssClassName: String = ""): UIComponent(_id, _cssClassName)
 open class ModalWindow<T: Any>(val page: Page<T>, _id: String = UUID.randomUUID().toString(), val onClose: (T) -> Unit = {}, _cssClassName: String = ""): UIComponent(_id, _cssClassName)
 open class ConfirmDialog(val message: String, val onOk: () -> Unit, val onCancel: () -> Unit = {}, val okMessage: String = "Ok", val cancelMessage: String = "Cancel", _cssClassName: String = "", _id: String = UUID.randomUUID().toString()): UIComponent(_id, _cssClassName)
@@ -18,8 +18,9 @@ enum class UserMessageType { INFO }
 open class UserMessage(val message: String, val type: UserMessageType = UserMessageType.INFO): UIComponent(UUID.randomUUID().toString(), "")
 
 fun captionFrom(id: String): String = UtilsUI.captionFromId(id)
+fun idFrom(caption: String): String = UtilsUI.idFromCaption(caption)
 
-data class Label(private val _id: String, private val _cssClassName: String = "", val caption: String = captionFrom(_id)): UIComponent(_id, _cssClassName)
+data class Label(val caption: String, private val _cssClassName: String = "", private val _id: String = UtilsUI.idFromCaption(caption)): UIComponent(_id, _cssClassName)
 
 enum class InputType { Text, TextArea, Password, Select, Date, Radio, Checkbox }
 data class Input(private val _id: String, val type: InputType = InputType.Text, private val _cssClassName: String = "", val caption: String = captionFrom(_id)): UIComponent(_id, _cssClassName)
@@ -33,7 +34,7 @@ data class InsideAppLink(private val _id: String, val uiViewClass: Class<out Com
 
 data class Grid(private val _id: String, val elementType: KClass<out Any>, val columns: List<String> = listOf(), private val _cssClassName: String = "",
                 val caption: String = captionFrom(_id), val gridConfiguration: GridConfiguration = GridConfiguration()): UIComponent(_id, _cssClassName)
-data class GridConfiguration(val columnGenerators: Map<String, UIComponent> = mapOf(), val gridSelectionType: GridSelectionType = GridSelectionType.SINGLE)
+data class GridConfiguration(var columnGenerators: Map<String, UIComponent> = mapOf(), var gridSelectionType: GridSelectionType = GridSelectionType.SINGLE, var rowsToShow: Int = 10)
 enum class GridSelectionType { SINGLE, MULTI, NONE }
 
 

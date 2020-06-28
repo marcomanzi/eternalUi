@@ -54,7 +54,7 @@ class Vaadin15UiElementsHandler() : VaadinElementsHandler {
                     if (this is HorizontalLayout) {
                         this.add(*children.toTypedArray())
                         this.setVerticalComponentAlignment(FlexComponent.Alignment.END, *children.filterIsInstance<RadioButtonGroup<*>>().toTypedArray())
-                        children.filterIsInstance<Checkbox>().toTypedArray()?.let { checkBoxes ->
+                        children.filterIsInstance<Checkbox>().toTypedArray().let { checkBoxes ->
                             checkBoxes.forEach { it.style.set("padding-bottom", "7px") }
                             this.setVerticalComponentAlignment(FlexComponent.Alignment.END, *checkBoxes)
                         }
@@ -79,12 +79,14 @@ class Vaadin15UiElementsHandler() : VaadinElementsHandler {
     private fun UIComponent.asInput() = this as Input
     private fun UIComponent.asInputNumber() = this as InputNumber
     private val objectToVaadinCreator: Map<Class<out UIComponent>, (UIComponent) -> Component > = mapOf(
-            Pair(VerticalContainer::class.java, { it -> VerticalLayout().apply { isSpacing = false; isMargin = false; setSizeFull() }}),
-            Pair(HorizontalContainer::class.java, { it -> HorizontalLayout().apply { isMargin = false; setSizeFull() } }),
+            Pair(VerticalContainer::class.java, { _ -> VerticalLayout().apply { isSpacing = false; isMargin = false; setSizeFull() }}),
+            Pair(HorizontalContainer::class.java, { _ -> HorizontalLayout().apply { isMargin = false; setSizeFull() } }),
             Pair(TabsContainer::class.java, { it -> Tabs().apply { setupTabs(it, this) } }),
             Pair(Input::class.java, { it -> enumToVaadinCreator[it.asInput().type]?.invoke(it)?: Div() }),
             Pair(InputNumber::class.java, { it -> enumToVaadinCreator[it.asInputNumber().type]?.invoke(it)?: Div() }),
-            Pair(Label::class.java, { it -> VaadinLabel((it as Label).caption) }),
+            Pair(Label::class.java, { it -> VaadinLabel((it as Label).caption).apply {
+                if (it.caption == "") height = "20px"
+            }}),
             Pair(Button::class.java, { it -> com.vaadin.flow.component.button.Button((it as Button).caption) }),
             Pair(DownloadButton::class.java, { it -> downloadButton(it as DownloadButton) }),
             Pair(Grid::class.java, { it -> com.vaadin.flow.component.grid.Grid((it as Grid).elementType.java).apply { setupGrid(this, it) } }),
@@ -101,7 +103,7 @@ class Vaadin15UiElementsHandler() : VaadinElementsHandler {
                 }
             }),
             Pair(InputType.Date, { it -> DatePicker(UtilsUI.captionFromId(it.asInput().caption)) }),
-            Pair(InputType.Radio, { it -> RadioButtonGroup<String>() }),
+            Pair(InputType.Radio, { _ -> RadioButtonGroup<String>() }),
             Pair(InputType.Checkbox, { it -> Checkbox(UtilsUI.captionFromId(it.asInput().caption)) }),
             Pair(InputNumberType.Double, { it -> numberField(it.asInputNumber()) }),
             Pair(InputNumberType.Integer, { it -> integerField(it.asInputNumber()) }),
@@ -155,7 +157,13 @@ class Vaadin15UiElementsHandler() : VaadinElementsHandler {
             GridSelectionType.MULTI -> com.vaadin.flow.component.grid.Grid.SelectionMode.MULTI
             else -> com.vaadin.flow.component.grid.Grid.SelectionMode.NONE
         })
-        grid.columns.forEach { it.isSortable = false }
+        grid.columns.forEach {
+            it.isSortable = false
+            it.isVisible = uiGrid.columns.contains(it.key)
+        }
+
+        grid.isHeightByRows = true
+        grid.height = "${uiGrid.gridConfiguration.rowsToShow}"
     }
 
     private fun downloadButton(downloadButton: DownloadButton): Component {

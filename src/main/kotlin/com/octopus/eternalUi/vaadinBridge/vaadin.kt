@@ -11,6 +11,8 @@ import com.vaadin.flow.router.BeforeEnterEvent
 import com.vaadin.flow.router.BeforeEnterObserver
 import java.io.InputStream
 import java.lang.reflect.Method
+import java.util.*
+import kotlin.NoSuchElementException
 
 interface VaadinElementsHandler {
     fun cleanView(component: Component)
@@ -125,6 +127,8 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
 
     private fun vaadinComponentForUi(it: UIComponent): Component = uiComponentToVaadinComponent[it] ?: error("No Vaadin component found for uiComponent defined")
 
+    private fun uiComponentForVaadin(it: Component): UIComponent = uiComponentToVaadinComponent.entries.firstOrNull { e -> e.value == it  }?.key ?: error("No Vaadin component found for uiComponent defined")
+
     private fun linkDomainToComponents() {
         page.fields().forEach { linkFieldToComponent(it) }
         linkFieldsToSession()
@@ -186,6 +190,10 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
 
     fun getUIComponentById(fieldName: String): UIComponent = uiComponentToVaadinComponent.keys.first { it.id == fieldName }
 
+    fun getContainerUIComponentByChildId(fieldName: String): Optional<UIComponent> = getComponentById(fieldName).parent.map { parent ->
+        uiComponentForVaadin(parent)
+    }
+
     private fun activateRestrictionsOnComponents() {
         page.pageController.enabledRules.forEach { activateRuleOnPage(it) }
     }
@@ -216,7 +224,7 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
         controller.javaClass.methods.firstOrNull { m -> m.name == it.id + "DataProvider" }?.let { m ->
             page.pageController.uiDataProviders.addWithCheck(when {
                 m.returnType.name == UiDataProvider::class.java.name -> (m.invoke(controller) as UiDataProvider<out Identifiable>).let { dp ->
-                    return@let UiDataProvider(it.id, dp.dataProvider, dp.refreshRule, *dp.filterIds, methodActionDataProviderId(m, it.id))
+                    UiDataProvider(it.id, dp.dataProvider, dp.refreshRule, *dp.filterIds, methodActionDataProviderId(m, it.id))
                 }
                 else -> UiDataProvider(it.id, m.invoke(controller) as AbstractDataProvider<out Identifiable>, id = methodActionDataProviderId(m, it.id))
             })
@@ -233,6 +241,7 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
         }
         controller.javaClass.methods.firstOrNull { m -> m.name == it.id + "Changed" }?.let { m ->
             page.pageController.actions.addWithCheck(when {
+                m.parameterTypes[0].name.endsWith("EternalUI") -> OnChangeUIAction(it.id, methodActionDataProviderId(m, it.id)) { ui -> m.invoke(controller, ui) as EternalUI<T> }
                 m.returnType.name == domain.name -> OnChangeAction(it.id, methodActionDataProviderId(m, it.id)) { ui -> m.invoke(controller, ui) as T }
                 else -> OnChangeReader(it.id, methodActionDataProviderId(m, it.id)) { ui -> m.invoke(controller, ui) as T }
             })
@@ -248,6 +257,8 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
             { refresher { applyNewDomainOnPage(action.onDataDomainClassFunction(page.pageDomain.dataClass)) } }
             is OnClickReader -> elementsHandler.addClickAction(getComponentById(action.onComponentId))
             { refresher { action.onDataDomainClassReader(page.pageDomain.dataClass) }}
+            is OnChangeUIAction -> elementsHandler.addOnChangeAction(getComponentById(action.onComponentId))
+            { refresher { applyNewDomainOnPage(action.onUIFunction(this).page.pageDomain.dataClass) } }
             is OnChangeAction -> elementsHandler.addOnChangeAction(getComponentById(action.onComponentId))
             { refresher { applyNewDomainOnPage(action.onDataDomainClassFunction(page.pageDomain.dataClass)) }}
             is OnChangeReader-> elementsHandler.addOnChangeAction(getComponentById(action.onComponentId))
