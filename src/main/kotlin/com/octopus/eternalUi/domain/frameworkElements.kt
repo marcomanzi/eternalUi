@@ -16,6 +16,11 @@ abstract class UIComponent(val id: String, var cssClassName: String = "", val co
     fun setStyle(styleApplier: (EternalUI<*>) -> Unit) {
         this.styleApplyer = styleApplier
     }
+    fun getUIComponentsIds(): List<String> {
+        fun getUIComponentIdsRecursive(uiComponent: UIComponent): List<String> =
+                uiComponent.containedUIComponents.flatMap { getUIComponentIdsRecursive(it) } + uiComponent.id
+        return getUIComponentIdsRecursive(this)
+    }
 }
 
 open class PageController<T: Any>(val actions: MutableList<Action<T>> = mutableListOf(),
@@ -27,7 +32,8 @@ open class PageDomain<T: Any>(val dataClass: T):UIDomain
 open class PageBackend<T: Any>: UIBackend
 
 open class UiDataProvider<T: Identifiable>(val forComponentId: String = "", val dataProvider: com.octopus.eternalUi.domain.db.DataProvider<T>,
-                                           val refreshRule: Rule<out Identifiable> = NoRule(), vararg val filterIds: String, val id: String = UUID.randomUUID().toString()) {
+                                           val refreshRule: Rule<out Identifiable> = NoRule(), vararg val filterIds: String,
+                                           val id: String = UUID.randomUUID().toString(), var toApply:Boolean = true) {
     fun applyFilterValueToDataProvider(filterId: String, filterValue: Any) = dataProvider.addFilter(filterId, filterValue)
 
     companion object {

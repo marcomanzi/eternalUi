@@ -21,15 +21,16 @@ class Home(@Autowired var simpleInputs: SimpleInputs, @Autowired val simpleForm:
            @Autowired val simpleListGrid: SimpleListGrid, @Autowired val dynamicLayout: DynamicLayout): Page<EmptyDomain>(
         VerticalContainer(
                 Label("Eternal UI", "h1"),
-                HorizontalContainer( Label("Examples", "h2"), Button("activateDebugButton", caption = (if (debugModeActive) "Deactivate" else "Activate") + " Debug Button")),
+                HorizontalContainer( Label("Examples", "h2"), Button("activateDebugButton")),
                 TabsContainer(
                         Tab("Simple inputs", simpleInputs),
                         Tab("Simple Form", simpleForm),
                         Tab("List Grid", simpleListGrid),
                         Tab("Dynamic Layout", dynamicLayout)
                 )
-        )) {
-
+        ), beforeEnter = { it.page.pageDomain.dataClass.apply {
+    it.setCaptionTo("activateDebugButton", if (debugModeActive) "Deactivate Debug Button" else "Activate Debug Button")
+}}) {
     fun activateDebugButtonClicked(ui: EternalUI<EmptyDomain>): EternalUI<EmptyDomain> = ui.apply {
         debugModeActive = !debugModeActive
         EternalUI.reloadPage()

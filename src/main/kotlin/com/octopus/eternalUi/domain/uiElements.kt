@@ -1,6 +1,7 @@
 package com.octopus.eternalUi.domain
 
 import com.octopus.eternalUi.domain.db.Message
+import com.octopus.eternalUi.vaadinBridge.EternalUI
 import com.vaadin.flow.component.Component
 import java.io.InputStream
 import java.util.*
@@ -41,7 +42,10 @@ enum class GridSelectionType { SINGLE, MULTI, NONE }
 open class EmptyDomain
 
 @Suppress("UNCHECKED_CAST")
-abstract class Page<T : Any>(val uiView: UIComponent, val pageController: PageController<T> = PageController(), var pageDomain: PageDomain<T> = PageDomain(EmptyDomain() as T), var set: Boolean = false):
+abstract class Page<T : Any>(val uiView: UIComponent, val pageController: PageController<T> = PageController(),
+                             var pageDomain: PageDomain<T> = PageDomain(EmptyDomain() as T), var set: Boolean = false,
+                             var beforeEnter: ((EternalUI<T>) -> T)? = null
+):
         UIComponent(UUID.randomUUID().toString(), pageDomain.javaClass.simpleName) {
     private val observers: MutableMap<String, (Any?) -> Unit> = mutableMapOf()
     fun hasValues(vararg ids: String): Boolean = ids.all { getFieldValue(it).let { value -> value != null && value.toString().isNotEmpty() } }

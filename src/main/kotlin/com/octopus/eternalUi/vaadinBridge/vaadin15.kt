@@ -151,6 +151,16 @@ class Vaadin15UiElementsHandler() : VaadinElementsHandler {
         }
     }
 
+    override fun setCaption(component: Component, caption: String) {
+        fun methodOrNull(component: Component, methodName: String) =
+                component::class.java.methods.firstOrNull { it.name == methodName }
+        methodOrNull(component, "setLabel")?: methodOrNull(component, "setText")?.invoke(component, caption)
+    }
+
+    override fun removeComponent(componentById: Component) {
+        componentById.parent.map { parent -> (parent as HasComponents).remove(componentById) }
+    }
+
     private fun setupGrid(grid: com.vaadin.flow.component.grid.Grid<out Any>, uiGrid: Grid) {
         grid.setSelectionMode(when(uiGrid.gridConfiguration.gridSelectionType) {
             GridSelectionType.SINGLE -> com.vaadin.flow.component.grid.Grid.SelectionMode.SINGLE

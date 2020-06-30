@@ -4,7 +4,7 @@ import com.octopus.eternalUi.vaadinBridge.EternalUI
 import java.io.InputStream
 import java.util.*
 
-abstract class Action<T: Any>(val onComponentId: String, val id: String = UUID.randomUUID().toString())
+abstract class Action<T: Any>(val onComponentId: String, val id: String = UUID.randomUUID().toString(), var toApply: Boolean = true)
 class OnClickUIAction<T: Any>(_onComponentId: String, val _id: String = UUID.randomUUID().toString(), val onUIFunction: (EternalUI<T>) -> EternalUI<T>): Action<T>(_onComponentId, _id)
 class OnClickAction<T: Any>(_onComponentId: String, val _id: String = UUID.randomUUID().toString(), val onDataDomainClassFunction: (T) -> T): Action<T>(_onComponentId, _id)
 class OnClickReader<T: Any>(_onComponentId: String, val _id: String = UUID.randomUUID().toString(), val onDataDomainClassReader: (T) -> Unit): Action<T>(_onComponentId, _id)

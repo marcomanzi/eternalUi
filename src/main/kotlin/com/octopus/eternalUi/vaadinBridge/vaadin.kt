@@ -48,6 +48,8 @@ interface VaadinElementsHandler {
     fun switchCaptionTo(component: Component, newCaption: String)
     fun showFileInDifferentTab(file: File)
     fun reloadPage()
+    fun setCaption(componentById: Component, caption: String)
+    fun removeComponent(componentById: Component)
 }
 
 val elementsHandler = Vaadin15UiElementsHandler()
@@ -61,18 +63,71 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
         beforeEnter(null)
     }
 
-    open fun customBehaviourOnEnter(eternalUI: EternalUI<T>) {}
+    open fun customBehaviourOnEnter(eternalUI: EternalUI<T>) {
+        page.beforeEnter?.let { beforeEnter ->
+            page.pageDomain = PageDomain(beforeEnter(eternalUI))
+        }
+    }
 
     override fun beforeEnter(be: BeforeEnterEvent?) {
+        setActionsAndDataProvidersToApply()
         elementsHandler.getFromSession(domain_session_key)?.let {
             page.pageDomain = PageDomain(it) as PageDomain<T>
             elementsHandler.removeFromSession(domain_session_key)
         }
         elementsHandler.cleanView(this)
         uiComponentToVaadinComponent = createMapUIComponentToVaadinComponent(page.uiView)
-        setInContainerComponentsChildren()
+        setInContainerChildrenComponentForAllComponents()
         addMainUIToView()
-        addConnectionBetweenControllerAndDomainBasedOnConvention(page)
+        addActionsDataProvidersFromMethodsAndNamingConvention(page)
+        setupConnectionsBetweenBackendAndUI()
+
+        addDebugButton()
+        customBehaviourOnEnter(this)
+    }
+
+    private fun setActionsAndDataProvidersToApply() {
+        page.pageController.uiDataProviders.forEach { it.toApply = true }
+        page.pageController.actions.forEach { it.toApply = true }
+    }
+
+    private fun setActionsAndDataProvidersToApply(uiComponent: UIComponent) {
+        val ids = uiComponent.getUIComponentsIds()
+        page.pageController.uiDataProviders.filter { ids.contains(it.forComponentId) }.forEach { it.toApply = true }
+        page.pageController.actions.filter { ids.contains(it.onComponentId) }.forEach { it.toApply = true }
+    }
+
+    fun addComponent(nearComponentId: String, uiComponent: UIComponent) {
+        val componentToAdd = if (uiComponent is TabsContainer) {
+            VerticalContainer(uiComponent)
+        } else { uiComponent }
+        val toAddComponent = createMapUIComponentToVaadinComponent(componentToAdd)
+        uiComponentToVaadinComponent = uiComponentToVaadinComponent + toAddComponent
+        toAddComponent.keys.forEach { setInContainerChildrenComponent(it) }
+        elementsHandler.addToParent(vaadinComponentForUi(getUIComponentById(nearComponentId)).parent.get(),
+                vaadinComponentForUi(componentToAdd))
+        toAddComponent.keys.forEach { addActionsDataProvidersFromMethodsAndNamingConvention(page, it) }
+        setupConnectionsBetweenBackendAndUI()
+    }
+
+    fun removeByComponentId(componentId: String) {
+        if (isThereComponentById(componentId)) {
+            val uiComponentById = getUIComponentById(componentId)
+
+            if (uiComponentById is TabsContainer) {
+                getComponentById(componentId).parent.ifPresent { p ->
+                    elementsHandler.removeComponent(p)
+                }
+            }
+            uiComponentById.containedUIComponents.forEach {
+                elementsHandler.removeComponent(getComponentById(it.id))
+            }
+            elementsHandler.removeComponent(getComponentById(componentId))
+        }
+    }
+
+    private fun setupConnectionsBetweenBackendAndUI() {
+        removeActionsDataProvidersWithoutUIComponent()
         activateDataProvidersOnComponents()
         linkDataProviderFiltersToDomain()
         linkDomainToComponents()
@@ -80,9 +135,10 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
         activateActionsOnComponents()
         linkDataProviderFiltersToComponents()
         applyStileApplierFunction()
+    }
 
-        addDebugButton()
-        customBehaviourOnEnter(this)
+    private fun removeActionsDataProvidersWithoutUIComponent() {
+        page.pageController.uiDataProviders.removeIf { isThereComponentById(it.forComponentId).not() }
     }
 
     private fun applyStileApplierFunction() {
@@ -106,15 +162,20 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
         else map
     }
 
-    private fun setInContainerComponentsChildren() {
+    private fun setInContainerChildrenComponentForAllComponents() {
+        uiComponentToVaadinComponent.keys.forEach {
+            setInContainerChildrenComponent(it)
+        }
+    }
+
+    private fun setInContainerChildrenComponent(uiComponent: UIComponent) {
         fun addVaadinComponentsToContainer(uiComponent: UIComponent) {
             elementsHandler.addToParent(vaadinComponentForUi(uiComponent), uiComponent.containedUIComponents.map { vaadinComponentForUi(it) })
         }
-
-        uiComponentToVaadinComponent.keys.filter { it.containedUIComponents.isNotEmpty() }.forEach {
-            addVaadinComponentsToContainer(it)
-            if (it is TabsContainer) {
-                elementsHandler.addToParent(vaadinComponentForUi(it).parent.get(), EternalUI((it.containedUIComponents.first() as Tab<*>).page).prepareUI().mainPageComponentForUI())
+        if (uiComponent.containedUIComponents.isNotEmpty()) {
+            addVaadinComponentsToContainer(uiComponent)
+            if (uiComponent is TabsContainer) {
+                elementsHandler.addToParent(vaadinComponentForUi(uiComponent).parent.get(), EternalUI((uiComponent.containedUIComponents.first() as Tab<*>).page).prepareUI().mainPageComponentForUI())
             }
         }
     }
@@ -208,13 +269,14 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
         page.pageController.actions.forEach { activateActionOnPage(it) }
     }
 
-    private fun addConnectionBetweenControllerAndDomainBasedOnConvention(page: Page<T>) {
-        uiComponentToVaadinComponent.keys.forEach {
-            val controller = page.pageController
-            val domain = page.pageDomain.dataClass.javaClass
-            createActionsDataProviderFromMethods(controller, it, page, domain)
-            createActionsDataProviderFromMethods(page, it, page, domain)
-        }
+    private fun addActionsDataProvidersFromMethodsAndNamingConvention(page: Page<T>) =
+            uiComponentToVaadinComponent.keys.forEach { addActionsDataProvidersFromMethodsAndNamingConvention(page, it) }
+
+    private fun addActionsDataProvidersFromMethodsAndNamingConvention(page: Page<T>, uiComponent: UIComponent) {
+        val controller = page.pageController
+        val domain = page.pageDomain.dataClass.javaClass
+        createActionsDataProviderFromMethods(controller, uiComponent, page, domain)
+        createActionsDataProviderFromMethods(page, uiComponent, page, domain)
     }
 
     private fun createActionsDataProviderFromMethods(controller: Any, it: UIComponent, page: Page<T>, domain: Class<T>) {
@@ -249,21 +311,24 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
     }
 
     private fun activateActionOnPage(action: Action<T>) {
-        val refresher = refresher(action, page)
-        when(action) {
-            is OnClickUIAction -> elementsHandler.addClickAction(getComponentById(action.onComponentId))
-            { refresher { applyNewDomainOnPage(action.onUIFunction(this).page.pageDomain.dataClass) } }
-            is OnClickAction -> elementsHandler.addClickAction(getComponentById(action.onComponentId))
-            { refresher { applyNewDomainOnPage(action.onDataDomainClassFunction(page.pageDomain.dataClass)) } }
-            is OnClickReader -> elementsHandler.addClickAction(getComponentById(action.onComponentId))
-            { refresher { action.onDataDomainClassReader(page.pageDomain.dataClass) }}
-            is OnChangeUIAction -> elementsHandler.addOnChangeAction(getComponentById(action.onComponentId))
-            { refresher { applyNewDomainOnPage(action.onUIFunction(this).page.pageDomain.dataClass) } }
-            is OnChangeAction -> elementsHandler.addOnChangeAction(getComponentById(action.onComponentId))
-            { refresher { applyNewDomainOnPage(action.onDataDomainClassFunction(page.pageDomain.dataClass)) }}
-            is OnChangeReader-> elementsHandler.addOnChangeAction(getComponentById(action.onComponentId))
-            { refresher { action.onDataDomainClassReader(page.pageDomain.dataClass) }}
-            is DownloadAction-> elementsHandler.addDownloadInputStream(action, page.pageDomain.dataClass, getComponentById(action.onComponentId))
+        if (action.toApply) {
+            val refresher = refresher(action, page)
+            when(action) {
+                is OnClickUIAction -> elementsHandler.addClickAction(getComponentById(action.onComponentId))
+                { refresher { applyNewDomainOnPage(action.onUIFunction(this).page.pageDomain.dataClass) } }
+                is OnClickAction -> elementsHandler.addClickAction(getComponentById(action.onComponentId))
+                { refresher { applyNewDomainOnPage(action.onDataDomainClassFunction(page.pageDomain.dataClass)) } }
+                is OnClickReader -> elementsHandler.addClickAction(getComponentById(action.onComponentId))
+                { refresher { action.onDataDomainClassReader(page.pageDomain.dataClass) }}
+                is OnChangeUIAction -> elementsHandler.addOnChangeAction(getComponentById(action.onComponentId))
+                { refresher { applyNewDomainOnPage(action.onUIFunction(this).page.pageDomain.dataClass) } }
+                is OnChangeAction -> elementsHandler.addOnChangeAction(getComponentById(action.onComponentId))
+                { refresher { applyNewDomainOnPage(action.onDataDomainClassFunction(page.pageDomain.dataClass)) }}
+                is OnChangeReader-> elementsHandler.addOnChangeAction(getComponentById(action.onComponentId))
+                { refresher { action.onDataDomainClassReader(page.pageDomain.dataClass) }}
+                is DownloadAction-> elementsHandler.addDownloadInputStream(action, page.pageDomain.dataClass, getComponentById(action.onComponentId))
+            }
+            action.toApply = false
         }
     }
 
@@ -316,14 +381,19 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
     }
 
     private fun activateDataProvidersOnComponents() {
-        page.pageController.uiDataProviders.forEach { dataProvider ->
+        page.pageController.uiDataProviders.filter { it.toApply }.forEach { dataProvider ->
             if (dataProvider.dataProvider is AbstractDomainAwareDataProvider<*>) dataProvider.dataProvider.domain = page.pageDomain.dataClass
             elementsHandler.addDataProviderTo(getUIComponentById(dataProvider.forComponentId), getComponentById(dataProvider.forComponentId), dataProvider.dataProvider)
+            dataProvider.toApply = false
         }
     }
 
     fun switchCaptionTo(componentId: String, newCaption: String) {
         elementsHandler.switchCaptionTo(getComponentById(componentId), newCaption)
+    }
+
+    fun setCaptionTo(componentId: String, caption: String) {
+        elementsHandler.setCaption(getComponentById(componentId), caption)
     }
 
     companion object {

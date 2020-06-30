@@ -16,21 +16,22 @@ class DynamicLayout: Page<DynamicLayoutData>(
         VerticalContainer(Input("select", InputType.Select)),
         pageDomain = PageDomain(DynamicLayoutData())
 ) {
-    fun selectDataProvider() = ListDataProvider<Message>("selectChoice1", "selectChoice2")
+    fun selectDataProvider() = ListDataProvider<Message>("", "addSelect", "removeSelect", "addTab", "removeTab")
     fun selectAddedAfterDataProvider() = ListDataProvider<Message>("selectChoice3", "selectChoice4")
     fun selectChanged(ui: EternalUI<DynamicLayoutData>): EternalUI<DynamicLayoutData> {
-        if (!ui.page.pageDomain.dataClass.addedSecondComponent)
-            ui.getContainerUIComponentByChildId("select").map { containerUIComponent ->
-                containerUIComponent.containedUIComponents.add(Input("selectAddedAfter", InputType.Select))
-            }
-
-        ui.page.pageDomain.dataClass.addedSecondComponent = true
-        EternalUI.showInUI(UserMessage("Adding Select for selection ${ui.page.pageDomain.dataClass.select}"))
-        EternalUI.setInSession(domain_session_key, ui.page.pageDomain.dataClass)
-        ui.beforeEnter(null)
+        when (ui.page.pageDomain.dataClass.select) {
+            "addSelect" -> ui.addComponent("select", Input("selectAddedAfter", InputType.Select))
+            "removeSelect" -> ui.removeByComponentId("selectAddedAfter")
+            "addTab" -> ui.addComponent("select",
+                    TabsContainer(Tab("First Tab", TabAdded()), Tab("Second Tab", TabAdded2()), _id = "tabAdded"))
+            "removeTab" -> ui.removeByComponentId("tabAdded")
+        }
         return ui
     }
 }
 
-data class DynamicLayoutData(val select: String = "selectChoice1", val selectAddedAfter: String = "selectChoice3", var addedSecondComponent: Boolean = false)
+class TabAdded: Page<EmptyDomain>(Label("Tab Content"))
+class TabAdded2: Page<EmptyDomain>(Label("Tab Content 2"))
+
+data class DynamicLayoutData(val select: String = "", val selectAddedAfter: String = "selectChoice4")
 
