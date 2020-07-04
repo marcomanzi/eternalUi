@@ -4,6 +4,7 @@ import com.octopus.eternalUi.domain.*
 import com.octopus.eternalUi.domain.db.ListDataProvider
 import com.octopus.eternalUi.domain.db.Message
 import com.octopus.eternalUi.vaadinBridge.EternalUI
+import com.vaadin.flow.component.button.ButtonVariant
 import com.vaadin.flow.spring.annotation.UIScope
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
@@ -26,7 +27,8 @@ class SimpleForm: Page<SimpleFormData>(
         VerticalContainer(
                 HorizontalContainer(Input("name"), Input("surname"), Input("age", InputType.Date),
                 Input("preferredFood", InputType.Radio), Input("newUser", InputType.Checkbox)),
-                Button("showFormData"), Button("prefillForm")
+                Button("showFormData", _cssClassName = "red"),
+                Button("prefillForm")
         ),
         pageDomain = PageDomain(SimpleFormData())
 ) {

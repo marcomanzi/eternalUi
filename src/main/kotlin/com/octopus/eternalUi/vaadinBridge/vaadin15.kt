@@ -21,15 +21,18 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup
 import com.vaadin.flow.component.tabs.Tabs
 import com.vaadin.flow.component.textfield.*
+import com.vaadin.flow.data.renderer.ComponentRenderer
 import com.vaadin.flow.data.value.ValueChangeMode
+import com.vaadin.flow.function.SerializableFunction
 import com.vaadin.flow.router.RouterLink
 import com.vaadin.flow.server.InputStreamFactory
 import com.vaadin.flow.server.StreamResource
 import kotlin.streams.asSequence
+import com.vaadin.flow.component.grid.Grid as VaadinGrid
 import com.vaadin.flow.component.html.Label as VaadinLabel
 
 @Suppress("UNCHECKED_CAST")
-class Vaadin15UiElementsHandler() : VaadinElementsHandler {
+class Vaadin15UiElementsHandler : VaadinElementsHandler {
 
     override fun debugButton(toDebugStringSupplier: () -> String): Component =
             com.vaadin.flow.component.button.Button("Debug").apply { addClickListener {
@@ -89,7 +92,7 @@ class Vaadin15UiElementsHandler() : VaadinElementsHandler {
             }}),
             Pair(Button::class.java, { it -> com.vaadin.flow.component.button.Button((it as Button).caption) }),
             Pair(DownloadButton::class.java, { it -> downloadButton(it as DownloadButton) }),
-            Pair(Grid::class.java, { it -> com.vaadin.flow.component.grid.Grid((it as Grid).elementType.java).apply { setupGrid(this, it) } }),
+            Pair(Grid::class.java, { it -> VaadinGrid((it as Grid).elementType.java).apply { setupGrid(this as VaadinGrid<Any>, it) } }),
             Pair(InsideAppLink::class.java, { it -> RouterLink((it as InsideAppLink).caption, it.uiViewClass) })
     )
 
@@ -100,6 +103,7 @@ class Vaadin15UiElementsHandler() : VaadinElementsHandler {
             Pair(InputType.Select, { it ->
                 ComboBox<Message>(UtilsUI.captionFromId(it.asInput().caption)).apply {
                     isClearButtonVisible = true
+                    isPreventInvalidInput = true
                 }
             }),
             Pair(InputType.Date, { it -> DatePicker(UtilsUI.captionFromId(it.asInput().caption)) }),
@@ -161,12 +165,22 @@ class Vaadin15UiElementsHandler() : VaadinElementsHandler {
         componentById.parent.map { parent -> (parent as HasComponents).remove(componentById) }
     }
 
-    private fun setupGrid(grid: com.vaadin.flow.component.grid.Grid<out Any>, uiGrid: Grid) {
+    private fun setupGrid(grid: VaadinGrid<Any>, uiGrid: Grid) {
         grid.setSelectionMode(when(uiGrid.gridConfiguration.gridSelectionType) {
-            GridSelectionType.SINGLE -> com.vaadin.flow.component.grid.Grid.SelectionMode.SINGLE
-            GridSelectionType.MULTI -> com.vaadin.flow.component.grid.Grid.SelectionMode.MULTI
-            else -> com.vaadin.flow.component.grid.Grid.SelectionMode.NONE
+            GridSelectionType.SINGLE -> VaadinGrid.SelectionMode.SINGLE
+            GridSelectionType.MULTI -> VaadinGrid.SelectionMode.MULTI
+            else -> VaadinGrid.SelectionMode.NONE
         })
+        uiGrid.gridConfiguration.columnGenerators.keys.forEach {
+            grid.removeColumnByKey(it)
+            grid.addColumn(ComponentRenderer(SerializableFunction<Any, Component> { item: Any ->
+                val component = uiGrid.gridConfiguration.columnGenerators[it]
+                val ui = component as UIComponent
+                ui.javaClass.methods.firstOrNull { method -> method.name == "setCaption" }?.invoke(ui, "")
+                setupComponentForGrid(item, it, grid, createFor(ui))
+            })).setKey(it).setHeader(captionFrom(it))
+        }
+
         grid.columns.forEach {
             it.isSortable = false
             it.isVisible = uiGrid.columns.contains(it.key)
@@ -174,6 +188,20 @@ class Vaadin15UiElementsHandler() : VaadinElementsHandler {
 
         grid.isHeightByRows = true
         grid.height = "${uiGrid.gridConfiguration.rowsToShow}"
+    }
+
+    private val componentSetupForGrid: Map<Class<out Component>, (Any, String, VaadinGrid<Any>, Component) -> Unit > = mapOf(
+            Pair(TextField::class.java, { item, key, grid, it -> (it as TextField).apply {
+                label = ""
+                val f = item.javaClass.getDeclaredField(key)
+                f.isAccessible = true
+                addValueChangeListener { v -> f.set(item, v.value) }
+                setValue(f.get(item), this)
+            } })
+    )
+
+    private fun setupComponentForGrid(item: Any, key: String, grid: VaadinGrid<Any>, component: Component): Component = component.apply {
+        componentSetupForGrid[component::class.java]?.invoke(item, key, grid, this)
     }
 
     private fun downloadButton(downloadButton: DownloadButton): Component {
@@ -198,14 +226,14 @@ class Vaadin15UiElementsHandler() : VaadinElementsHandler {
                 is NumberField -> componentById.value?.toDouble()?:0.0
                 is IntegerField -> componentById.value?.toInt()?:0
                 is BigDecimalField -> componentById.value
-                is com.vaadin.flow.component.grid.Grid<*> -> if (componentById.selectedItems.isNotEmpty()) componentById.selectedItems.first() else null
+                is VaadinGrid<*> -> if (componentById.selectedItems.isNotEmpty()) componentById.selectedItems.first() else null
                 else -> (componentById as AbstractField<*, *>).getValue()
             }
 
     override fun addValueChangeListener(component: Component, listener: (Any) -> Unit) {
         when(component) {
             is ComboBox<*> -> component.addValueChangeListener { listener.invoke((it.value?:"").toString()) }
-            is com.vaadin.flow.component.grid.Grid<*> -> component.addSelectionListener { listener.invoke(it.firstSelectedItem) }
+            is VaadinGrid<*> -> component.addSelectionListener { listener.invoke(it.firstSelectedItem) }
             else -> (component as AbstractField<*, *>).addValueChangeListener { field ->
                 field.value?.let { newValue -> listener.invoke(newValue) } }
         }
@@ -214,7 +242,7 @@ class Vaadin15UiElementsHandler() : VaadinElementsHandler {
     override fun addOnChangeAction(component: Component, listener: (Any) -> Unit) {
         when(component) {
             is ComboBox<*> -> component.addValueChangeListener { listener.invoke(it.value) }
-            is com.vaadin.flow.component.grid.Grid<*> -> component.addSelectionListener { listener.invoke(it.firstSelectedItem) }
+            is VaadinGrid<*> -> component.addSelectionListener { listener.invoke(it.firstSelectedItem) }
             else -> (component as AbstractField<*, *>).addValueChangeListener { listener.invoke(it.value) }
         }
     }
@@ -225,7 +253,7 @@ class Vaadin15UiElementsHandler() : VaadinElementsHandler {
 
     override fun addClickAction(component: Component, action: () -> Unit) {
         when(component) {
-            is com.vaadin.flow.component.grid.Grid<*> -> component.addItemClickListener { action() }
+            is VaadinGrid<*> -> component.addItemClickListener { action() }
             else -> (component as ClickNotifier<*>).addClickListener { action() }
         }
     }
@@ -238,7 +266,7 @@ class Vaadin15UiElementsHandler() : VaadinElementsHandler {
         when(component) {
             is ComboBox<*> -> addDataProviderToSelect(component as ComboBox<Identifiable>, dataProvider)
             is RadioButtonGroup<*> -> addDataProviderToRadioButtonGroup(component as RadioButtonGroup<Identifiable>, dataProvider)
-            is com.vaadin.flow.component.grid.Grid<*> -> addDataProviderToGrid(component as com.vaadin.flow.component.grid.Grid<Identifiable>, dataProvider)
+            is VaadinGrid<*> -> addDataProviderToGrid(component as VaadinGrid<Identifiable>, dataProvider)
         }
     }
 
@@ -250,21 +278,21 @@ class Vaadin15UiElementsHandler() : VaadinElementsHandler {
         select.setDataProvider(DataProviderWrapper<Identifiable>(dataProvider))
     }
 
-    private fun addDataProviderToGrid(grid: com.vaadin.flow.component.grid.Grid<out Identifiable>, dataProvider: com.octopus.eternalUi.domain.db.DataProvider<out Identifiable>) {
+    private fun addDataProviderToGrid(grid: VaadinGrid<out Identifiable>, dataProvider: com.octopus.eternalUi.domain.db.DataProvider<out Identifiable>) {
         grid.dataProvider = DataProviderWrapper<Identifiable>(dataProvider)
     }
 
     override fun refresh(component: Component) {
         when (component) {
             is ComboBox<*> -> component.dataProvider.refreshAll()
-            is com.vaadin.flow.component.grid.Grid<*> -> component.dataProvider.refreshAll()
+            is VaadinGrid<*> -> component.dataProvider.refreshAll()
         }
     }
 
     override fun refresh(component: Component, identifiable: Identifiable) {
         when (component) {
             is ComboBox<*> -> (component as ComboBox<Identifiable>).dataProvider.refreshItem(identifiable)
-            is com.vaadin.flow.component.grid.Grid<*> -> (component as com.vaadin.flow.component.grid.Grid<Identifiable>).dataProvider.refreshItem(identifiable)
+            is VaadinGrid<*> -> (component as VaadinGrid<Identifiable>).dataProvider.refreshItem(identifiable)
         }
     }
 

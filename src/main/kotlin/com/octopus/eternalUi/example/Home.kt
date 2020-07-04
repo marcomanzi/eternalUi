@@ -3,6 +3,7 @@ package com.octopus.eternalUi.example
 import com.octopus.eternalUi.domain.*
 import com.octopus.eternalUi.vaadinBridge.EternalUI
 import com.vaadin.flow.component.dependency.JsModule
+import com.vaadin.flow.component.page.Push
 import com.vaadin.flow.router.PreserveOnRefresh
 import com.vaadin.flow.router.Route
 import com.vaadin.flow.spring.annotation.UIScope

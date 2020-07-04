@@ -7,9 +7,15 @@ import java.io.InputStream
 import java.util.*
 import kotlin.reflect.KClass
 
-open class VerticalContainer(vararg children: UIComponent, _id: String = UUID.randomUUID().toString(), _cssClassName: String = ""): UIComponent(_id, _cssClassName, containedUIComponents = children.asList().toMutableList())
-open class HorizontalContainer(vararg children: UIComponent, _id: String = UUID.randomUUID().toString(), _cssClassName: String = ""): UIComponent(_id, _cssClassName, containedUIComponents = children.asList().toMutableList())
-open class TabsContainer(vararg children: Tab<*>, _id: String = UUID.randomUUID().toString(), _cssClassName: String = ""): UIComponent(_id, _cssClassName, containedUIComponents = children.asList().toMutableList())
+open class VerticalContainer(vararg children: UIComponent, _id: String = UUID.randomUUID().toString(), _cssClassName: String = ""): UIComponent(_id, _cssClassName, containedUIComponents = children.asList().toMutableList()) {
+    constructor(id: String, vararg children: Tab<*>, cssClassName: String = ""): this(children = *children, _id = id, _cssClassName = cssClassName) {}
+}
+open class HorizontalContainer(vararg children: UIComponent, _id: String = UUID.randomUUID().toString(), _cssClassName: String = ""): UIComponent(_id, _cssClassName, containedUIComponents = children.asList().toMutableList()) {
+    constructor(id: String, vararg children: Tab<*>, cssClassName: String = ""): this(children = *children, _id = id, _cssClassName = cssClassName) {}
+}
+open class TabsContainer(vararg children: Tab<*>, _id: String = UUID.randomUUID().toString(), _cssClassName: String = ""): UIComponent(_id, _cssClassName, containedUIComponents = children.asList().toMutableList()) {
+    constructor(id: String, vararg children: Tab<*>, cssClassName: String = ""): this(children = *children, _id = id, _cssClassName = cssClassName) {}
+}
 open class Tab<T: Any>(val caption: String, val page: Page<T>, _id: String = UUID.randomUUID().toString(), _cssClassName: String = ""): UIComponent(_id, _cssClassName)
 open class ModalWindow<T: Any>(val page: Page<T>, _id: String = UUID.randomUUID().toString(), val onClose: (T) -> Unit = {}, _cssClassName: String = ""): UIComponent(_id, _cssClassName)
 open class ConfirmDialog(val message: String, val onOk: () -> Unit, val onCancel: () -> Unit = {}, val okMessage: String = "Ok", val cancelMessage: String = "Cancel", _cssClassName: String = "", _id: String = UUID.randomUUID().toString()): UIComponent(_id, _cssClassName)
@@ -34,8 +40,10 @@ data class InsideAppLink(private val _id: String, val uiViewClass: Class<out Com
                          val caption: String = captionFrom(_id)): UIComponent(_id, _cssClassName)
 
 data class Grid(private val _id: String, val elementType: KClass<out Any>, val columns: List<String> = listOf(), private val _cssClassName: String = "",
-                val caption: String = captionFrom(_id), val gridConfiguration: GridConfiguration = GridConfiguration()): UIComponent(_id, _cssClassName)
-data class GridConfiguration(var columnGenerators: Map<String, UIComponent> = mapOf(), var gridSelectionType: GridSelectionType = GridSelectionType.SINGLE, var rowsToShow: Int = 10)
+                val caption: String = captionFrom(_id), val gridConfiguration: GridConfig = GridConfiguration()): UIComponent(_id, _cssClassName)
+abstract class GridConfig(var columnGenerators: Map<String, Any> = mapOf(), open var gridSelectionType: GridSelectionType = GridSelectionType.SINGLE, open var rowsToShow: Int = 10)
+data class GridConfiguration(var _columnGenerators: Map<String, UIComponent> = mapOf()): GridConfig(_columnGenerators as Map<String, Any>)
+//data class DomainDrivenGridConfiguration<T: Any>(var _columnGenerators: Map<String, (T) -> UIComponent> = mapOf()): GridConfig(_columnGenerators as Map<String, Any>)
 enum class GridSelectionType { SINGLE, MULTI, NONE }
 
 

@@ -18,8 +18,13 @@ $_documentContainer.innerHTML = `<custom-style>
             font-size: 1.4em !important;
             font-weight: bold;
         }
+        
         .exampleDialogCssClass {
             width: 90em !important;
+        }
+        
+        .Button.red {
+            color: red;
         }
     </style> 
  </custom-style>`;

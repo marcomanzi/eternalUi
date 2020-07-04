@@ -98,6 +98,7 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
     }
 
     fun addComponent(nearComponentId: String, uiComponent: UIComponent) {
+        setActionsAndDataProvidersToApply(uiComponent)
         val componentToAdd = if (uiComponent is TabsContainer) {
             VerticalContainer(uiComponent)
         } else { uiComponent }
