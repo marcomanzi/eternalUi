@@ -50,6 +50,7 @@ interface VaadinElementsHandler {
     fun reloadPage()
     fun setCaption(componentById: Component, caption: String)
     fun removeComponent(componentById: Component)
+    fun setReadOnly(componentById: Component, readOnly: Boolean): Any
 }
 
 val elementsHandler = Vaadin15UiElementsHandler()
@@ -371,7 +372,7 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
         componentIdsToRefresh.forEach { refresh(it) }
     }
 
-    private fun applyNewDomainOnPage(dataClass: Any) {
+    fun applyNewDomainOnPage(dataClass: Any) {
         dataClass.javaClass.declaredFields.forEach { declaredField ->
             declaredField.isAccessible = true
             val newValue = declaredField.get(dataClass)
@@ -396,6 +397,10 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
     fun setCaptionTo(componentId: String, caption: String) {
         elementsHandler.setCaption(getComponentById(componentId), caption)
     }
+
+    fun setReadOnly(componentId: String) = elementsHandler.setReadOnly(getComponentById(componentId), true)
+
+    fun setNotReadOnly(componentId: String) = elementsHandler.setReadOnly(getComponentById(componentId), true)
 
     companion object {
         val keysInSession = mutableListOf<String>()

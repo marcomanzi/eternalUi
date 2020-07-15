@@ -233,7 +233,7 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
     override fun addValueChangeListener(component: Component, listener: (Any) -> Unit) {
         when(component) {
             is ComboBox<*> -> component.addValueChangeListener { listener.invoke((it.value?:"").toString()) }
-            is VaadinGrid<*> -> component.addSelectionListener { listener.invoke(it.firstSelectedItem) }
+            is VaadinGrid<*> -> component.addSelectionListener { listener.invoke(it.allSelectedItems) }
             else -> (component as AbstractField<*, *>).addValueChangeListener { field ->
                 field.value?.let { newValue -> listener.invoke(newValue) } }
         }
@@ -242,7 +242,7 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
     override fun addOnChangeAction(component: Component, listener: (Any) -> Unit) {
         when(component) {
             is ComboBox<*> -> component.addValueChangeListener { listener.invoke(it.value) }
-            is VaadinGrid<*> -> component.addSelectionListener { listener.invoke(it.firstSelectedItem) }
+            is VaadinGrid<*> -> component.addSelectionListener { listener.invoke(it.allSelectedItems) }
             else -> (component as AbstractField<*, *>).addValueChangeListener { listener.invoke(it.value) }
         }
     }
@@ -254,7 +254,8 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
     override fun addClickAction(component: Component, action: () -> Unit) {
         when(component) {
             is VaadinGrid<*> -> component.addItemClickListener { action() }
-            else -> (component as ClickNotifier<*>).addClickListener { action() }
+            is ClickNotifier<*> -> (component as ClickNotifier<*>).addClickListener { action() }
+            else -> println("Error on component ${component.id}")
         }
     }
 
@@ -287,6 +288,10 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
             is ComboBox<*> -> component.dataProvider.refreshAll()
             is VaadinGrid<*> -> component.dataProvider.refreshAll()
         }
+    }
+
+    override fun setReadOnly(componentById: Component, readOnly: Boolean) {
+        (componentById as HasValueAndElement<*, *>).setReadOnly(readOnly)
     }
 
     override fun refresh(component: Component, identifiable: Identifiable) {

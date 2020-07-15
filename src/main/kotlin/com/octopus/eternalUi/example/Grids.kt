@@ -32,9 +32,9 @@ class SimpleListGrid: Page<GridDomains>(
                 }),
                 Label(""),
                 Label("Grid with enhanced columns"),
+                Button("addColumn"),
                 Grid("gridEnhancedColumns", SimpleTwoPropertiesGridBean::class, listOf("name", "surname", "thirdName"), gridConfiguration = GridConfiguration(
                         mapOf<String, UIComponent>(
-                                Pair("name", Input("name", InputType.Text)),
                                 Pair("surname", Input("surname", InputType.Text)))
                 ).apply {
                     rowsToShow = 2
@@ -42,20 +42,28 @@ class SimpleListGrid: Page<GridDomains>(
         ),
         pageDomain = PageDomain(GridDomains())
 ) {
+
     fun gridSingleDataProvider() = ListDataProvider(SimpleGridBean("Marco"), SimpleGridBean("Francesco"))
     fun gridMultiDataProvider() = ListDataProvider(SimpleGridBean("Marco"), SimpleGridBean("Francesco"))
     fun gridNoneDataProvider() = ListDataProvider(SimpleGridBean("Marco"), SimpleGridBean("Francesco"))
-    fun gridEnhancedColumnsDataProvider() = ListDataProvider(
-            SimpleTwoPropertiesGridBean("Marco", "Manzi", "Superman"),
-            SimpleTwoPropertiesGridBean("Francesco", "Manzi", "Spiderman"))
-}
+    private val enhancedColumnsDataProvider = ListDataProvider(
+            SimpleTwoPropertiesGridBean("Marco", "Manzi"),
+            SimpleTwoPropertiesGridBean("Francesco", "Manzi"))
 
+    fun gridEnhancedColumnsDataProvider() = enhancedColumnsDataProvider
+    fun addColumnClicked(ui: EternalUI<GridDomains>): EternalUI<GridDomains> = ui.apply {
+        enhancedColumnsDataProvider.addElement(SimpleTwoPropertiesGridBean("", ""))
+        ui.refresh("gridMulti")
+    }
+}
 data class SimpleGridBean(val name: String): Identifiable {
     override fun getUiId(): String = name
 }
 
-data class SimpleTwoPropertiesGridBean(val name: String, val surname: String, val thirdName: String): Identifiable {
+data class SimpleTwoPropertiesGridBean(val name: String, val surname: String): Identifiable {
     override fun getUiId(): String = name
 }
 
-data class GridDomains(val gridSingle: SimpleGridBean? = null, val gridEnhancedColumns: SimpleTwoPropertiesGridBean? = null)
+data class GridDomains(val gridSingle: SimpleGridBean? = null,
+                       val gridMulti: List<SimpleGridBean>? = null,
+                       val gridEnhancedColumns: SimpleTwoPropertiesGridBean? = null)

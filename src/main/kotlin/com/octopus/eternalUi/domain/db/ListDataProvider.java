@@ -43,7 +43,7 @@ public class ListDataProvider<T extends Identifiable> extends AbstractDataProvid
 
     @Override
     public int count(Map<String, Object> filters) {
-        return ((Long) elements.stream().filter(e -> listFilter.apply(e, filters)).count()).intValue();
+         return ((Long) elements.stream().filter(e -> listFilter.apply(e, filters)).count()).intValue();
     }
 
     @Override
@@ -67,5 +67,9 @@ public class ListDataProvider<T extends Identifiable> extends AbstractDataProvid
 
     public List<T> getElements() {
         return elements;
+    }
+
+    public void addElement(T element) {
+        elements.add(element);
     }
 }

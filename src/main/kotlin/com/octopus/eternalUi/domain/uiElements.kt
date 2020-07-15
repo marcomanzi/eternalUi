@@ -27,7 +27,7 @@ open class UserMessage(val message: String, val type: UserMessageType = UserMess
 fun captionFrom(id: String): String = UtilsUI.captionFromId(id)
 fun idFrom(caption: String): String = UtilsUI.idFromCaption(caption)
 
-data class Label(val caption: String, private val _cssClassName: String = "", private val _id: String = UtilsUI.idFromCaption(caption)): UIComponent(_id, _cssClassName)
+data class Label(val caption: String, private val _cssClassName: String = "", private val _id: String = UUID.randomUUID().toString()): UIComponent(_id, _cssClassName)
 
 enum class InputType { Text, TextArea, Password, Select, Date, Radio, Checkbox }
 data class Input(private val _id: String, val type: InputType = InputType.Text, private val _cssClassName: String = "", val caption: String = captionFrom(_id)): UIComponent(_id, _cssClassName)
@@ -87,11 +87,16 @@ abstract class Page<T : Any>(val uiView: UIComponent, val pageController: PageCo
         val field = pageDomain.dataClass.javaClass.getDeclaredField(id)
         field.isAccessible = true
         observers[id]?.invoke(value)
-        when (value) {
-            null -> field.set(pageDomain.dataClass, value)
-            is Optional<*> -> if (value.isPresent) field.set(pageDomain.dataClass, value.get()) else field.set(pageDomain.dataClass, null)
-            is Message -> field.set(pageDomain.dataClass, value.message)
-            else -> field.set(pageDomain.dataClass, value)
+        if (field.type.name.toUpperCase().contains("LIST")) {
+            field.set(pageDomain.dataClass, listOf(value))
+        } else {
+            when (value) {
+                null -> field.set(pageDomain.dataClass, value)
+                is Optional<*> -> if (value.isPresent) field.set(pageDomain.dataClass, value.get()) else field.set(pageDomain.dataClass, null)
+                is Message -> field.set(pageDomain.dataClass, value.message)
+                is Collection<*> -> if (value.isEmpty()) field.set(pageDomain.dataClass, null) else field.set(pageDomain.dataClass, value.first())
+                else -> field.set(pageDomain.dataClass, value)
+            }
         }
     }
 
