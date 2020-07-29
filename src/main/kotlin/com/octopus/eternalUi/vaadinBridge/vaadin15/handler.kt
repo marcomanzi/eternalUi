@@ -29,13 +29,13 @@ class ComponentHandler {
 
         fun setValue(fieldValue: Any?, componentById: Component) {
             when (componentById) {
-                is TextField -> componentById.value = fieldValue.toString()
-                is TextArea -> componentById.value = fieldValue.toString()
-                is PasswordField -> componentById.value = fieldValue.toString()
-                is DatePicker -> componentById.value = fieldValue as LocalDate
-                is NumberField -> componentById.value = fieldValue as Double
-                is IntegerField -> componentById.value = fieldValue as Int
-                is BigDecimalField -> componentById.value = fieldValue as BigDecimal
+                is TextField -> componentById.value = fieldValue?.toString()
+                is TextArea -> componentById.value = fieldValue?.toString()
+                is PasswordField -> componentById.value = fieldValue?.toString()
+                is DatePicker -> componentById.value = fieldValue?.let { return@let it as LocalDate}
+                is NumberField -> componentById.value = fieldValue?.let { return@let it as Double}
+                is IntegerField -> componentById.value = fieldValue?.let { return@let it as Int}
+                is BigDecimalField -> componentById.value = fieldValue?.let { return@let it as BigDecimal}
                 is ComboBox<*> -> if (fieldValue != null && fieldValue.toString() != "") componentById.value = Message(fieldValue.toString())
                 is com.vaadin.flow.component.grid.Grid<*> ->
                     if (fieldValue == null) componentById.deselectAll()

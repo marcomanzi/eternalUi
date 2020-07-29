@@ -34,7 +34,7 @@ open class PageBackend<T: Any>: UIBackend
 open class UiDataProvider<T: Identifiable>(val forComponentId: String = "", val dataProvider: com.octopus.eternalUi.domain.db.DataProvider<T>,
                                            val refreshRule: Rule<out Identifiable> = NoRule(), vararg val filterIds: String,
                                            val id: String = UUID.randomUUID().toString(), var toApply:Boolean = true) {
-    fun applyFilterValueToDataProvider(filterId: String, filterValue: Any) = dataProvider.addFilter(filterId, filterValue)
+    fun applyFilterValueToDataProvider(filterId: String, filterValue: Any?) = dataProvider.addFilter(filterId, filterValue)
 
     companion object {
         fun <T: Identifiable> definition(dataProvider: com.octopus.eternalUi.domain.db.DataProvider<T>, vararg filterIds: String):UiDataProvider<T> =

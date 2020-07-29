@@ -106,7 +106,7 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
                     isPreventInvalidInput = true
                 }
             }),
-            Pair(InputType.Date, { it -> DatePicker(UtilsUI.captionFromId(it.asInput().caption)) }),
+            Pair(InputType.Date, { it -> DatePicker(UtilsUI.captionFromId(it.asInput().caption)).apply {  } }),
             Pair(InputType.Radio, { _ -> RadioButtonGroup<String>() }),
             Pair(InputType.Checkbox, { it -> Checkbox(UtilsUI.captionFromId(it.asInput().caption)) }),
             Pair(InputNumberType.Double, { it -> numberField(it.asInputNumber()) }),
@@ -230,12 +230,12 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
                 else -> (componentById as AbstractField<*, *>).getValue()
             }
 
-    override fun addValueChangeListener(component: Component, listener: (Any) -> Unit) {
+    override fun addValueChangeListener(component: Component, listener: (Any?) -> Unit) {
         when(component) {
             is ComboBox<*> -> component.addValueChangeListener { listener.invoke((it.value?:"").toString()) }
             is VaadinGrid<*> -> component.addSelectionListener { listener.invoke(it.allSelectedItems) }
             else -> (component as AbstractField<*, *>).addValueChangeListener { field ->
-                field.value?.let { newValue -> listener.invoke(newValue) } }
+                field.value.let { newValue -> listener.invoke(newValue) } }
         }
     }
 

@@ -24,7 +24,7 @@ interface VaadinElementsHandler {
     fun debugButton(toDebugStringSupplier: () -> String): Component
     fun setValue(fieldValue: Any?, componentById: Component)
     fun getValue(componentById: Component): Any?
-    fun addValueChangeListener(component: Component, listener: (Any) -> Unit)
+    fun addValueChangeListener(component: Component, listener: (Any?) -> Unit)
     fun addOnChangeAction(component: Component, listener: (Any) -> Unit)
 
     fun enable(component: Component, condition: Boolean)
