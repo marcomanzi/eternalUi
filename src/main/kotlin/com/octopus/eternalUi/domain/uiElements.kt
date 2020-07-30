@@ -98,6 +98,19 @@ abstract class Page<T : Any>(val uiView: UIComponent, val pageController: PageCo
                 else -> field.set(pageDomain.dataClass, value)
             }
         }
+        setInMetadata(id, value)
+    }
+
+    fun setInMetadata(id: String, value: Any?) {
+        try {
+            val metadata = pageDomain.dataClass.javaClass.getDeclaredField("metadata").let {
+                it.isAccessible = true
+                return@let it.get(pageDomain.dataClass) as MutableMap<String, Any?>
+            }
+            metadata[id] = value
+        } catch (ex: Exception) {
+            ex.printStackTrace()
+        }
     }
 
     fun fields(): List<String> = pageDomain.dataClass.javaClass.declaredFields.map { it.name }

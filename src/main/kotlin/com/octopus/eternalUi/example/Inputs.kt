@@ -43,5 +43,5 @@ class SimpleForm: Page<SimpleFormData>(
 }
 
 data class SimpleFormData(val name: String = "", val surname: String = "", val age: LocalDate = LocalDate.of(1983, 1, 1),
-                          val preferredFood: String = "", val newUser: Boolean = false)
+                          val preferredFood: String = "", val newUser: Boolean = false, val metadata: MutableMap<String, Any?> = mutableMapOf())
 
