@@ -27,6 +27,7 @@ import com.vaadin.flow.function.SerializableFunction
 import com.vaadin.flow.router.RouterLink
 import com.vaadin.flow.server.InputStreamFactory
 import com.vaadin.flow.server.StreamResource
+import java.util.Comparator
 import kotlin.streams.asSequence
 import com.vaadin.flow.component.grid.Grid as VaadinGrid
 import com.vaadin.flow.component.html.Label as VaadinLabel
@@ -186,8 +187,15 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
             it.isVisible = uiGrid.columns.contains(it.key)
         }
 
+
+        grid.setColumnOrder(grid.columns.sortedWith(columnsComparator(uiGrid.columns)) )
+
         grid.isHeightByRows = true
         grid.height = "${uiGrid.gridConfiguration.rowsToShow}"
+    }
+
+    private fun columnsComparator(columns: List<String>) = Comparator<com.vaadin.flow.component.grid.Grid.Column<Any>> { c1, c2 ->
+        columns.indexOf(c1.key).compareTo(columns.indexOf(c2.key))
     }
 
     private val componentSetupForGrid: Map<Class<out Component>, (Any, String, VaadinGrid<Any>, Component) -> Unit > = mapOf(

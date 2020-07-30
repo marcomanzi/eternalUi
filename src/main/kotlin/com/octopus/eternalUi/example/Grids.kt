@@ -33,7 +33,7 @@ class SimpleListGrid: Page<GridDomains>(
                 Label(""),
                 Label("Grid with enhanced columns"),
                 Button("addColumn"),
-                Grid("gridEnhancedColumns", SimpleTwoPropertiesGridBean::class, listOf("name", "surname", "thirdName"), gridConfiguration = GridConfiguration(
+                Grid("gridEnhancedColumns", SimpleThreePropertiesGridBean::class, listOf("name", "middleName", "surname"), gridConfiguration = GridConfiguration(
                         mapOf<String, UIComponent>(
                                 Pair("surname", Input("surname", InputType.Text)))
                 ).apply {
@@ -47,12 +47,12 @@ class SimpleListGrid: Page<GridDomains>(
     fun gridMultiDataProvider() = ListDataProvider(SimpleGridBean("Marco"), SimpleGridBean("Francesco"))
     fun gridNoneDataProvider() = ListDataProvider(SimpleGridBean("Marco"), SimpleGridBean("Francesco"))
     private val enhancedColumnsDataProvider = ListDataProvider(
-            SimpleTwoPropertiesGridBean("Marco", "Manzi"),
-            SimpleTwoPropertiesGridBean("Francesco", "Manzi"))
+            SimpleThreePropertiesGridBean("Marco", "Manzi", "midName"),
+            SimpleThreePropertiesGridBean("Francesco", "Manzi", "midName"))
 
     fun gridEnhancedColumnsDataProvider() = enhancedColumnsDataProvider
     fun addColumnClicked(ui: EternalUI<GridDomains>): EternalUI<GridDomains> = ui.apply {
-        enhancedColumnsDataProvider.addElement(SimpleTwoPropertiesGridBean("", ""))
+        enhancedColumnsDataProvider.addElement(SimpleThreePropertiesGridBean("", "", ""))
         ui.refresh("gridMulti")
     }
 }
@@ -61,6 +61,10 @@ data class SimpleGridBean(val name: String): Identifiable {
 }
 
 data class SimpleTwoPropertiesGridBean(val name: String, val surname: String): Identifiable {
+    override fun getUiId(): String = name
+}
+
+data class SimpleThreePropertiesGridBean(val name: String, val surname: String, val middleName: String): Identifiable {
     override fun getUiId(): String = name
 }
 
