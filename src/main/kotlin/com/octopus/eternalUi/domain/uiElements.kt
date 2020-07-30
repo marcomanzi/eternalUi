@@ -101,7 +101,7 @@ abstract class Page<T : Any>(val uiView: UIComponent, val pageController: PageCo
         setInMetadata(id, value)
     }
 
-    fun setInMetadata(id: String, value: Any?) {
+    private fun setInMetadata(id: String, value: Any?) {
         try {
             val metadata = pageDomain.dataClass.javaClass.getDeclaredField("metadata").let {
                 it.isAccessible = true
