@@ -93,9 +93,15 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
             }}),
             Pair(Button::class.java, { it -> com.vaadin.flow.component.button.Button((it as Button).caption) }),
             Pair(DownloadButton::class.java, { it -> downloadButton(it as DownloadButton) }),
-            Pair(Grid::class.java, { it -> VaadinGrid((it as Grid).elementType.java).apply { setupGrid(this as VaadinGrid<Any>, it) } }),
+            Pair(Grid::class.java, { it -> grid(it) }),
             Pair(InsideAppLink::class.java, { it -> RouterLink((it as InsideAppLink).caption, it.uiViewClass) })
     )
+
+    private fun grid(it: UIComponent): Component = if ((it as Grid).elementType.java is Map<*, *>) {
+        VaadinGrid(MutableMap::class.java).apply { setupGrid(this as VaadinGrid<Any>, it) }
+    } else {
+        VaadinGrid(it.elementType.java).apply { setupGrid(this as VaadinGrid<Any>, it) }
+    }
 
     private val enumToVaadinCreator: Map<Enum<*>, (UIComponent) -> Component> = mapOf(
             Pair(InputType.Text, { it -> TextField(UtilsUI.captionFromId(it.asInput().caption)).apply { valueChangeMode = ValueChangeMode.EAGER } }),
@@ -172,6 +178,13 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
             GridSelectionType.MULTI -> VaadinGrid.SelectionMode.MULTI
             else -> VaadinGrid.SelectionMode.NONE
         })
+        uiGrid.columns.filter { c -> grid.columns.map { it.key }.contains(c).not() }.forEach { columnName ->
+            grid.addColumn { (it as Map<String, *>)[columnName] }.apply {
+                key = columnName
+                setHeader(captionFrom(columnName))
+            }
+        }
+
         uiGrid.gridConfiguration.columnGenerators.keys.forEach {
             grid.removeColumnByKey(it)
             grid.addColumn(ComponentRenderer(SerializableFunction<Any, Component> { item: Any ->
@@ -187,7 +200,6 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
             it.isVisible = uiGrid.columns.contains(it.key)
         }
 
-
         grid.setColumnOrder(grid.columns.sortedWith(columnsComparator(uiGrid.columns)) )
 
         grid.isHeightByRows = true
@@ -201,10 +213,15 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
     private val componentSetupForGrid: Map<Class<out Component>, (Any, String, VaadinGrid<Any>, Component) -> Unit > = mapOf(
             Pair(TextField::class.java, { item, key, grid, it -> (it as TextField).apply {
                 label = ""
-                val f = item.javaClass.getDeclaredField(key)
-                f.isAccessible = true
-                addValueChangeListener { v -> f.set(item, v.value) }
-                setValue(f.get(item), this)
+                if (item is Map<*, *>) {
+                    addValueChangeListener { v -> (item as MutableMap<String, Any?>)[key] = v.value }
+                    setValue(item[key], this)
+                } else {
+                    val f = item.javaClass.getDeclaredField(key)
+                    f.isAccessible = true
+                    addValueChangeListener { v -> f.set(item, v.value) }
+                    setValue(f.get(item), this)
+                }
             } })
     )
 
@@ -241,7 +258,7 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
     override fun addValueChangeListener(component: Component, listener: (Any?) -> Unit) {
         when(component) {
             is ComboBox<*> -> component.addValueChangeListener { listener.invoke((it.value?:"").toString()) }
-            is VaadinGrid<*> -> component.addSelectionListener { listener.invoke(it.allSelectedItems) }
+            is VaadinGrid<*> -> component.addSelectionListener { if (it.isFromClient) listener.invoke(it.allSelectedItems) }
             else -> (component as AbstractField<*, *>).addValueChangeListener { field ->
                 field.value.let { newValue -> listener.invoke(newValue) } }
         }

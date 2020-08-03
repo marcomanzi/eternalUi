@@ -5,7 +5,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class AbstractDataProvider<T extends Identifiable> implements DataProvider<T> {
+public abstract class AbstractDataProvider<T> implements DataProvider<T> {
 
     protected Map<String, Object> filters = new HashMap<>();
 

@@ -38,6 +38,14 @@ class SimpleListGrid: Page<GridDomains>(
                                 Pair("surname", Input("surname", InputType.Text)))
                 ).apply {
                     rowsToShow = 2
+                }),
+                Label(""),
+                Label("Grid with a maps as backend"),
+                Grid("gridWithMapAsBackend", Map::class, listOf("name", "middleName", "surname"), gridConfiguration = GridConfiguration(
+                        mapOf<String, UIComponent>(
+                                Pair("surname", Input("surname", InputType.Text)))
+                ).apply {
+                    rowsToShow = 2
                 })
         ),
         pageDomain = PageDomain(GridDomains())
@@ -50,7 +58,13 @@ class SimpleListGrid: Page<GridDomains>(
             SimpleThreePropertiesGridBean("Marco", "Manzi", "midName"),
             SimpleThreePropertiesGridBean("Francesco", "Manzi", "midName"))
 
+    private val gridWithMapAsBackendDataProvider = ListDataProvider(
+            mutableMapOf(Pair("name", "Marco"), Pair("surname", "Manzi"), Pair("middleName", "midName")),
+            mutableMapOf(Pair("name", "Francesco"), Pair("surname", "Manzi"), Pair("middleName", "midName")))
+
+
     fun gridEnhancedColumnsDataProvider() = enhancedColumnsDataProvider
+    fun gridWithMapAsBackendDataProvider() = gridWithMapAsBackendDataProvider
     fun addColumnClicked(ui: EternalUI<GridDomains>): EternalUI<GridDomains> = ui.apply {
         enhancedColumnsDataProvider.addElement(SimpleThreePropertiesGridBean("", "", ""))
         ui.refresh("gridMulti")
@@ -69,5 +83,6 @@ data class SimpleThreePropertiesGridBean(val name: String, val surname: String, 
 }
 
 data class GridDomains(val gridSingle: SimpleGridBean? = null,
-                       val gridMulti: List<SimpleGridBean>? = null,
-                       val gridEnhancedColumns: SimpleTwoPropertiesGridBean? = null)
+                       val gridMulti: Set<SimpleGridBean>? = null,
+                       val gridEnhancedColumns: SimpleThreePropertiesGridBean? = null,
+                       val gridWithMapAsBackend: MutableMap<String, Any?>? = null)

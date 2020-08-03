@@ -4,13 +4,13 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-public interface DataProvider<T extends Identifiable> {
+public interface DataProvider<T> {
 
     int count(Map<String, Object> filters);
 
     List<T> page(Page page, Map<String, Object> filters);
 
-    T find(String id);
+    T find(T id);
 
     void addFilter(String name, Object value);
 

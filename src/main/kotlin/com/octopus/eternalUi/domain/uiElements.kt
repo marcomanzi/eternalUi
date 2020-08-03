@@ -87,8 +87,12 @@ abstract class Page<T : Any>(val uiView: UIComponent, val pageController: PageCo
         val field = pageDomain.dataClass.javaClass.getDeclaredField(id)
         field.isAccessible = true
         observers[id]?.invoke(value)
-        if (field.type.name.toUpperCase().contains("LIST")) {
-            field.set(pageDomain.dataClass, listOf(value))
+        if (field.type.name.toUpperCase().contains("SET")) {
+            if (value is Collection<*>) {
+                field.set(pageDomain.dataClass, value)
+            } else {
+                field.set(pageDomain.dataClass, listOf(value))
+            }
         } else {
             when (value) {
                 null -> field.set(pageDomain.dataClass, value)
@@ -108,9 +112,7 @@ abstract class Page<T : Any>(val uiView: UIComponent, val pageController: PageCo
                 return@let it.get(pageDomain.dataClass) as MutableMap<String, Any?>
             }
             metadata[id] = value
-        } catch (ex: Exception) {
-            ex.printStackTrace()
-        }
+        } catch (ex: Exception) {}
     }
 
     fun fields(): List<String> = pageDomain.dataClass.javaClass.declaredFields.map { it.name }

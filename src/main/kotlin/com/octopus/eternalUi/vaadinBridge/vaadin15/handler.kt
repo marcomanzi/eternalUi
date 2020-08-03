@@ -5,6 +5,8 @@ import com.vaadin.flow.component.Component
 import com.vaadin.flow.component.checkbox.Checkbox
 import com.vaadin.flow.component.combobox.ComboBox
 import com.vaadin.flow.component.datepicker.DatePicker
+import com.vaadin.flow.component.grid.Grid
+import com.vaadin.flow.component.grid.GridSingleSelectionModel
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup
 import com.vaadin.flow.component.textfield.*
 import java.math.BigDecimal
@@ -37,13 +39,19 @@ class ComponentHandler {
                 is IntegerField -> componentById.value = fieldValue?.let { return@let it as Int}
                 is BigDecimalField -> componentById.value = fieldValue?.let { return@let it as BigDecimal}
                 is ComboBox<*> -> if (fieldValue != null && fieldValue.toString() != "") componentById.value = Message(fieldValue.toString())
-                is com.vaadin.flow.component.grid.Grid<*> ->
-                    if (fieldValue == null) componentById.deselectAll()
-                    else if (fieldValue is Optional<*> && fieldValue.isPresent) {
-                        (componentById as com.vaadin.flow.component.grid.Grid<Any?>).select(fieldValue.get())
-                    }
+                is Grid<*> -> setValueOnGrid(componentById, fieldValue)
                 is RadioButtonGroup<*> -> componentById.value = Message(fieldValue.toString())
                 is Checkbox -> componentById.value = fieldValue.toString().toBoolean()
+            }
+        }
+
+        private fun setValueOnGrid(componentById: Grid<*>, fieldValue: Any?) {
+            val grid = componentById as Grid<Any?>
+            when {
+                fieldValue == null -> componentById.deselectAll()
+                fieldValue is Optional<*> && fieldValue.isPresent -> grid.select(fieldValue.get())
+                fieldValue is Collection<*> -> fieldValue.iterator().forEach { grid.select(it) }
+                else -> grid.select(fieldValue)
             }
         }
     }
