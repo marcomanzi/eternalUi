@@ -19,7 +19,7 @@ class HomeView(@Autowired var home: Home): EternalUI<EmptyDomain>(home)
 @Component
 @UIScope
 class Home(@Autowired var simpleInputs: SimpleInputs, @Autowired val simpleForm: SimpleForm,
-           @Autowired val simpleListGrid: SimpleListGrid, @Autowired val dynamicLayout: DynamicLayout): Page<EmptyDomain>(
+           @Autowired val simpleListGrid: SimpleListGrid, @Autowired val filteredGrid: SimpleFilteredGrid, @Autowired val dynamicLayout: DynamicLayout): Page<EmptyDomain>(
         VerticalContainer(
                 Label("Eternal UI", "h1"),
                 HorizontalContainer( Label("Examples", "h2"), Button("activateDebugButton")),
@@ -27,6 +27,7 @@ class Home(@Autowired var simpleInputs: SimpleInputs, @Autowired val simpleForm:
                         Tab("Simple inputs", simpleInputs),
                         Tab("Simple Form", simpleForm),
                         Tab("List Grid", simpleListGrid),
+                        Tab("Filtered Grid", filteredGrid),
                         Tab("Dynamic Layout", dynamicLayout)
                 )
         ), beforeEnter = { it.page.pageDomain.dataClass.apply {

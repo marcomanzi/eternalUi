@@ -113,7 +113,7 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
                     isPreventInvalidInput = true
                 }
             }),
-            Pair(InputType.Date, { it -> DatePicker(UtilsUI.captionFromId(it.asInput().caption)).apply {  } }),
+            Pair(InputType.Date, { it -> DatePicker(UtilsUI.captionFromId(it.asInput().caption)).apply { isClearButtonVisible = true } }),
             Pair(InputType.Radio, { _ -> RadioButtonGroup<String>() }),
             Pair(InputType.Checkbox, { it -> Checkbox(UtilsUI.captionFromId(it.asInput().caption)) }),
             Pair(InputNumberType.Double, { it -> numberField(it.asInputNumber()) }),
