@@ -3,13 +3,10 @@ package com.octopus.eternalUi.example
 import com.octopus.eternalUi.domain.*
 import com.octopus.eternalUi.domain.db.Identifiable
 import com.octopus.eternalUi.domain.db.ListDataProvider
-import com.octopus.eternalUi.domain.db.Message
 import com.octopus.eternalUi.vaadinBridge.EternalUI
-import com.vaadin.flow.spring.annotation.UIScope
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Component
-import java.time.LocalDate
 import java.util.*
 
 @Component @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
