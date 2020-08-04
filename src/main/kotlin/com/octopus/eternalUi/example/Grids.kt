@@ -10,6 +10,7 @@ import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Component
 import java.time.LocalDate
+import java.util.*
 
 @Component @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 class SimpleListGrid: Page<GridDomains>(
@@ -32,12 +33,13 @@ class SimpleListGrid: Page<GridDomains>(
                 }),
                 Label(""),
                 Label("Grid with enhanced columns"),
-                Button("addColumn"),
+                HorizontalContainer(Button("addColumn"), Button("removeColumn")),
                 Grid("gridEnhancedColumns", SimpleThreePropertiesGridBean::class, listOf("name", "middleName", "surname"), gridConfiguration = GridConfiguration(
                         mapOf<String, UIComponent>(
                                 Pair("surname", Input("surname", InputType.Text)))
                 ).apply {
                     rowsToShow = 2
+                    gridSelectionType = GridSelectionType.MULTI
                 }),
                 Label(""),
                 Label("Grid with a maps as backend"),
@@ -67,7 +69,13 @@ class SimpleListGrid: Page<GridDomains>(
     fun gridWithMapAsBackendDataProvider() = gridWithMapAsBackendDataProvider
     fun addColumnClicked(ui: EternalUI<GridDomains>): EternalUI<GridDomains> = ui.apply {
         enhancedColumnsDataProvider.addElement(SimpleThreePropertiesGridBean("", "", ""))
-        ui.refresh("gridMulti")
+        ui.refresh("gridEnhancedColumns")
+    }
+    fun removeColumnClicked(ui: EternalUI<GridDomains>): EternalUI<GridDomains> = ui.apply {
+        page.pageDomain.dataClass.gridEnhancedColumns?.let { list ->
+            list.forEach { enhancedColumnsDataProvider.removeElement(it) }
+        }
+        ui.refresh("gridEnhancedColumns")
     }
 }
 data class SimpleGridBean(val name: String): Identifiable {
@@ -78,12 +86,12 @@ data class SimpleTwoPropertiesGridBean(val name: String, val surname: String): I
     override fun getUiId(): String = name
 }
 
-data class SimpleThreePropertiesGridBean(val name: String, val surname: String, val middleName: String): Identifiable {
-    override fun getUiId(): String = name
+data class SimpleThreePropertiesGridBean(val name: String, val surname: String, val middleName: String, val uuid: String = UUID.randomUUID().toString()): Identifiable {
+    override fun getUiId(): String = uuid
 }
 
 data class GridDomains(val gridSingle: SimpleGridBean? = null,
                        val gridMulti: Set<SimpleGridBean>? = null,
-                       val gridEnhancedColumns: SimpleThreePropertiesGridBean? = null,
+                       val gridEnhancedColumns: Set<SimpleThreePropertiesGridBean>? = null,
                        val gridWithMapAsBackend: MutableMap<String, Any?>? = null,
                        val metadata: MutableMap<String, Any?>? = null)

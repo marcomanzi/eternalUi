@@ -72,4 +72,8 @@ public class ListDataProvider<T> extends AbstractDataProvider<T> {
     public void addElement(T element) {
         elements.add(element);
     }
+
+    public void removeElement(T element) {
+        elements.remove(element);
+    }
 }
