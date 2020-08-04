@@ -85,4 +85,5 @@ data class SimpleThreePropertiesGridBean(val name: String, val surname: String, 
 data class GridDomains(val gridSingle: SimpleGridBean? = null,
                        val gridMulti: Set<SimpleGridBean>? = null,
                        val gridEnhancedColumns: SimpleThreePropertiesGridBean? = null,
-                       val gridWithMapAsBackend: MutableMap<String, Any?>? = null)
+                       val gridWithMapAsBackend: MutableMap<String, Any?>? = null,
+                       val metadata: MutableMap<String, Any?>? = null)
