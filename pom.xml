@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.github.marcomanzi</groupId>
     <artifactId>eternalUi</artifactId>
-    <version>1.1.6-SNAPSHOT</version>
+    <version>1.1.6</version>
     <name>eternalUi</name>
     <packaging>jar</packaging>
     <url>https://github.com/marcomanzi/eternalUi</url>
