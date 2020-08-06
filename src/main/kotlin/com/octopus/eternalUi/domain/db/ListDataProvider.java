@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
-public class ListDataProvider<T extends Identifiable> extends AbstractDataProvider<T> {
+public class ListDataProvider<T> extends AbstractDataProvider<T> {
 
     private List<T> elements;
     private BiFunction<T, Map<String, Object>, Boolean> listFilter = (v, filters) -> true;
@@ -43,7 +43,7 @@ public class ListDataProvider<T extends Identifiable> extends AbstractDataProvid
 
     @Override
     public int count(Map<String, Object> filters) {
-        return ((Long) elements.stream().filter(e -> listFilter.apply(e, filters)).count()).intValue();
+         return ((Long) elements.stream().filter(e -> listFilter.apply(e, filters)).count()).intValue();
     }
 
     @Override
@@ -56,8 +56,8 @@ public class ListDataProvider<T extends Identifiable> extends AbstractDataProvid
     }
 
     @Override
-    public T find(String id) {
-        return elements.stream().filter(e -> e.getUiId().equals(id)).findFirst().get();
+    public T find(T id) {
+        return elements.stream().filter(e -> e.equals(id)).findFirst().get();
     }
 
     @Override
@@ -67,5 +67,13 @@ public class ListDataProvider<T extends Identifiable> extends AbstractDataProvid
 
     public List<T> getElements() {
         return elements;
+    }
+
+    public void addElement(T element) {
+        elements.add(element);
+    }
+
+    public void removeElement(T element) {
+        elements.remove(element);
     }
 }

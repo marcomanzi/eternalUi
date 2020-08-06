@@ -31,7 +31,7 @@ public class DataProviderWrapper<T extends Identifiable> extends com.vaadin.flow
 
     @Override
     public void refreshItem(T v) {
-        super.refreshItem(dataProvider.find(v.getUiId()));
+        super.refreshItem(dataProvider.find(v));
     }
 
     public DataProvider<T> getDataProvider() {

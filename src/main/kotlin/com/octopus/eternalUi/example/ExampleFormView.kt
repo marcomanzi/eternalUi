@@ -22,8 +22,8 @@ class ExampleFormView(@Autowired var exampleForm: ExampleForm): EternalUI<Exampl
 
 @Component
 @UIScope
-class ExampleForm(@Autowired var exampleFormController: ExampleFormController): Page<ExampleFormDomain>(
-        VerticalContainer("exampleFormContainer",
+class ExampleForm: Page<ExampleFormDomain>(
+        VerticalContainer(
                 Label("Example Eternal UI Application", "h1"),
                 Label("A simple UI with a grid, and a CRUD on the grid entity", "h3"),
                 Input("name"),
@@ -34,28 +34,25 @@ class ExampleForm(@Autowired var exampleFormController: ExampleFormController): 
                 Button("openConfirmDialog", caption = "Example Button that open a confirm dialog"),
                 Button("navigateToHome", caption = "Example Button to navigate to Home"),
                 DownloadButton("downloadCsv")),
-        exampleFormController,
-        PageDomain(ExampleFormDomain()))
+        pageDomain = PageDomain(ExampleFormDomain())) {
 
-@Service
-class ExampleFormController: PageController<ExampleFormDomain>() {
     val listDataProvider: ListDataProvider<GridBean> = ListDataProvider(BiFunction { v, filters ->  !filters.containsKey("name") ||
             v.name.toLowerCase().contains(filters["name"].toString().toLowerCase())},
             GridBean("Marco", "Manzi"), GridBean("Francesco", "Manzi"))
     @Autowired lateinit var entityFormOnlyForEntity: ExampleFormOnlyForEntity
 
-    fun listBasedGridDataProvider() = DataProvider.definition(listDataProvider, "name")
+    fun listBasedGridDataProvider() = UiDataProvider.definition(listDataProvider, "name")
 
     fun openDialogClicked(exampleFormDomain: ExampleFormDomain) = exampleFormDomain.apply {
-        EternalUI.showInUI(ModalWindow("modalExample1", entityFormOnlyForEntity.withEntity(ExampleFormOnlyForEntityDomain()), _cssClassName = "exampleDialogCssClass"))
+        EternalUI.showInUI(ModalWindow(entityFormOnlyForEntity.withEntity(ExampleFormOnlyForEntityDomain()), _cssClassName = "exampleDialogCssClass"))
     }
 
     fun openDialogWithValuesClicked(exampleFormDomain: ExampleFormDomain) = exampleFormDomain.apply {
-        EternalUI.showInUI(ModalWindow("modalExample2", entityFormOnlyForEntity.withEntity(ExampleFormOnlyForEntityDomain("Test Start Name"))))
+        EternalUI.showInUI(ModalWindow(entityFormOnlyForEntity.withEntity(ExampleFormOnlyForEntityDomain("Test Start Name"))))
     }
 
     fun navigateToHomeClicked(exampleFormDomain: ExampleFormDomain): ExampleFormDomain = exampleFormDomain.apply {
-        EternalUI.navigateTo(HomeView::class.java, HomeDomain("Test Input From Example View"))
+        EternalUI.navigateTo(HomeView::class.java)
     }
 
     fun openConfirmDialogClicked(it: ExampleFormDomain): ExampleFormDomain = it.apply {
