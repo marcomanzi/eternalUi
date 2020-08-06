@@ -27,7 +27,7 @@ import com.vaadin.flow.function.SerializableFunction
 import com.vaadin.flow.router.RouterLink
 import com.vaadin.flow.server.InputStreamFactory
 import com.vaadin.flow.server.StreamResource
-import java.util.Comparator
+import java.util.*
 import kotlin.streams.asSequence
 import com.vaadin.flow.component.grid.Grid as VaadinGrid
 import com.vaadin.flow.component.html.Label as VaadinLabel
@@ -327,6 +327,7 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
     }
 
     private val dialogKeyInSession = "LAST_OPENED_DIALOG"
+    private val modalWindowInSession = "modalWindowInSession"
     private val confirmDialogKeyInSession = "LAST_OPENED_CONFIRM_DIALOG"
     override fun <T: Any> showModalWindow(modalWindow: ModalWindow<T>) {
         if (UI.getCurrent().session.getAttribute(dialogKeyInSession) == null) {
@@ -334,8 +335,9 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
                 val mainPageComponentForUI = EternalUI(modalWindow.page).prepareUI().mainPageComponentForUI()
                 addCssClass(mainPageComponentForUI, modalWindow.cssClassName)
                 add(mainPageComponentForUI)
-                addDialogCloseActionListener { modalWindow.onClose(modalWindow.page.pageDomain.dataClass) }
                 UI.getCurrent().session.setAttribute(dialogKeyInSession, this)
+                UI.getCurrent().session.setAttribute(modalWindowInSession, modalWindow)
+                addDialogCloseActionListener { closeTopModalWindow() }
                 isCloseOnEsc = true
             }.open()
             UI.getCurrent().addShortcutListener(ShortcutEventListener { closeTopModalWindow() } , Key.ESCAPE)
@@ -348,7 +350,10 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
                 val mainPageComponentForUI = EternalUI(ConfirmDialogPage(confirmDialog)).prepareUI().mainPageComponentForUI()
                 addCssClass(mainPageComponentForUI, confirmDialog.cssClassName)
                 add(mainPageComponentForUI)
-                addDialogCloseActionListener { confirmDialog.onCancel() }
+                addDialogCloseActionListener {
+                    confirmDialog.onCancel()
+                    closeConfirmDialog()
+                }
                 UI.getCurrent().session.setAttribute(confirmDialogKeyInSession, this)
                 isCloseOnEsc = true
             }.open()
@@ -360,7 +365,14 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
         if (UI.getCurrent().session.getAttribute(dialogKeyInSession) != null) {
             (UI.getCurrent().session.getAttribute(dialogKeyInSession) as Dialog).close()
             UI.getCurrent().session.setAttribute(dialogKeyInSession, null)
+            callOnCloseForModalWindowAndRemoveFromSession()
         }
+    }
+
+    private fun callOnCloseForModalWindowAndRemoveFromSession() {
+        val modalWindow = UI.getCurrent().session.getAttribute(modalWindowInSession) as ModalWindow<Any>
+        modalWindow.onClose(modalWindow.page.pageDomain.dataClass)
+        UI.getCurrent().session.setAttribute(modalWindowInSession, null)
     }
 
     override fun closeConfirmDialog() {

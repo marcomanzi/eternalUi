@@ -298,14 +298,14 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
                 it is DownloadButton -> (m.invoke(controller, page.pageDomain.dataClass) as Pair<(T) -> String, (T) -> InputStream>).let { pair ->
                     DownloadAction(it.id, pair.first, pair.second, methodActionDataProviderId(m, it.id))
                 }
-                m.parameterTypes[0].name.endsWith("EternalUI") -> OnClickUIAction(it.id, methodActionDataProviderId(m, it.id)) { ui -> m.invoke(controller, ui) as EternalUI<T> }
+                (m.parameterTypes[0]?.name?:"").endsWith("EternalUI") -> OnClickUIAction(it.id, methodActionDataProviderId(m, it.id)) { ui -> m.invoke(controller, ui) as EternalUI<T> }
                 m.returnType.name == domain.name -> OnClickAction(it.id, methodActionDataProviderId(m, it.id)) { ui -> m.invoke(controller, ui) as T }
                 else -> OnClickReader(it.id, methodActionDataProviderId(m, it.id)) { ui -> m.invoke(controller, ui) }
             })
         }
         controller.javaClass.methods.firstOrNull { m -> m.name == it.id + "Changed" }?.let { m ->
             page.pageController.actions.addWithCheck(when {
-                m.parameterTypes[0].name.endsWith("EternalUI") -> OnChangeUIAction(it.id, methodActionDataProviderId(m, it.id)) { ui -> m.invoke(controller, ui) as EternalUI<T> }
+                (m.parameterTypes[0]?.name?:"").endsWith("EternalUI") -> OnChangeUIAction(it.id, methodActionDataProviderId(m, it.id)) { ui -> m.invoke(controller, ui) as EternalUI<T> }
                 m.returnType.name == domain.name -> OnChangeAction(it.id, methodActionDataProviderId(m, it.id)) { ui -> m.invoke(controller, ui) as T }
                 else -> OnChangeReader(it.id, methodActionDataProviderId(m, it.id)) { ui -> m.invoke(controller, ui) as T }
             })
