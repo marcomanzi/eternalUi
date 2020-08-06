@@ -43,8 +43,8 @@
         <spring-cloud.version>Greenwich.SR3</spring-cloud.version>
 
         <!-- Frontend -->
-        <node.version>v8.16.0</node.version>
-        <yarn.version>v1.16.0</yarn.version>
+        <node.version>v9.9.0</node.version>
+        <yarn.version>v1.22.4</yarn.version>
         <vaadin.version>15.0.6</vaadin.version>
         <maven.resources.plugin.version>3.0.2</maven.resources.plugin.version>
         <maven.surefire.plugin.version>2.21.0</maven.surefire.plugin.version>
@@ -139,7 +139,7 @@
                 <dependency>
                     <groupId>com.vaadin</groupId>
                     <artifactId>flow-server-production-mode</artifactId>
-                    <version>3.0.5</version>
+                    <version>3.1.6</version>
                     <scope>provided</scope>
                 </dependency>
             </dependencies>

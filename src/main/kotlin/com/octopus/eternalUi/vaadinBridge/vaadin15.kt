@@ -326,9 +326,9 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
         }
     }
 
-    private val dialogKeyInSession = "LAST_OPENED_DIALOG"
+    private val dialogKeyInSession = "dialogKeyInSession"
     private val modalWindowInSession = "modalWindowInSession"
-    private val confirmDialogKeyInSession = "LAST_OPENED_CONFIRM_DIALOG"
+    private val confirmDialogKeyInSession = "confirmDialogKeyInSession"
     override fun <T: Any> showModalWindow(modalWindow: ModalWindow<T>) {
         if (UI.getCurrent().session.getAttribute(dialogKeyInSession) == null) {
             Dialog().apply {
@@ -350,14 +350,11 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
                 val mainPageComponentForUI = EternalUI(ConfirmDialogPage(confirmDialog)).prepareUI().mainPageComponentForUI()
                 addCssClass(mainPageComponentForUI, confirmDialog.cssClassName)
                 add(mainPageComponentForUI)
-                addDialogCloseActionListener {
-                    confirmDialog.onCancel()
-                    closeConfirmDialog()
-                }
+                addDialogCloseActionListener { closeConfirmDialog(); confirmDialog.onCancel() }
                 UI.getCurrent().session.setAttribute(confirmDialogKeyInSession, this)
                 isCloseOnEsc = true
             }.open()
-            UI.getCurrent().addShortcutListener(ShortcutEventListener { closeTopModalWindow() } , Key.ESCAPE)
+            UI.getCurrent().addShortcutListener(ShortcutEventListener { closeConfirmDialog(); confirmDialog.onCancel()  } , Key.ESCAPE)
         }
     }
 
@@ -365,14 +362,11 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
         if (UI.getCurrent().session.getAttribute(dialogKeyInSession) != null) {
             (UI.getCurrent().session.getAttribute(dialogKeyInSession) as Dialog).close()
             UI.getCurrent().session.setAttribute(dialogKeyInSession, null)
-            callOnCloseForModalWindowAndRemoveFromSession()
+            (UI.getCurrent().session.getAttribute(modalWindowInSession) as ModalWindow<Any>).apply {
+                onClose(page.pageDomain.dataClass)
+            }
+            UI.getCurrent().session.setAttribute(modalWindowInSession, null)
         }
-    }
-
-    private fun callOnCloseForModalWindowAndRemoveFromSession() {
-        val modalWindow = UI.getCurrent().session.getAttribute(modalWindowInSession) as ModalWindow<Any>
-        modalWindow.onClose(modalWindow.page.pageDomain.dataClass)
-        UI.getCurrent().session.setAttribute(modalWindowInSession, null)
     }
 
     override fun closeConfirmDialog() {
