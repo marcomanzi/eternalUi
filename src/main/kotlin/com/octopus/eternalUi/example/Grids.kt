@@ -1,8 +1,10 @@
 package com.octopus.eternalUi.example
 
 import com.octopus.eternalUi.domain.*
+import com.octopus.eternalUi.domain.db.DataProvider
 import com.octopus.eternalUi.domain.db.Identifiable
 import com.octopus.eternalUi.domain.db.ListDataProvider
+import com.octopus.eternalUi.domain.db.Message
 import com.octopus.eternalUi.vaadinBridge.EternalUI
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
@@ -31,9 +33,10 @@ class SimpleListGrid: Page<GridDomains>(
                 Label(""),
                 Label("Grid with enhanced columns"),
                 HorizontalContainer(Button("addColumn"), Button("removeColumn")),
-                Grid("gridEnhancedColumns", SimpleThreePropertiesGridBean::class, listOf("name", "middleName", "surname"), gridConfiguration = GridConfiguration(
+                Grid("gridEnhancedColumns", WithDataProviderThreePropertiesGridBean::class, listOf("name", "middleName", "surname"), gridConfiguration = GridConfiguration(
                         mapOf<String, UIComponent>(
-                                Pair("surname", Input("surname", InputType.Text)))
+                                Pair("surname", Input("surname", InputType.Text)),
+                                Pair("middleName", Input("middleName", InputType.Select)))
                 ).apply {
                     rowsToShow = 2
                     gridSelectionType = GridSelectionType.MULTI
@@ -42,7 +45,8 @@ class SimpleListGrid: Page<GridDomains>(
                 Label("Grid with a maps as backend"),
                 Grid("gridWithMapAsBackend", Map::class, listOf("name", "middleName", "surname"), gridConfiguration = GridConfiguration(
                         mapOf<String, UIComponent>(
-                                Pair("surname", Input("surname", InputType.Text)))
+                                Pair("surname", Input("surname", InputType.Text)),
+                                Pair("middleName", Input("middleName", InputType.Select)))
                 ).apply {
                     rowsToShow = 2
                 })
@@ -53,19 +57,20 @@ class SimpleListGrid: Page<GridDomains>(
     fun gridSingleDataProvider() = ListDataProvider(SimpleGridBean("Marco"), SimpleGridBean("Francesco"))
     fun gridMultiDataProvider() = ListDataProvider(SimpleGridBean("Marco"), SimpleGridBean("Francesco"))
     fun gridNoneDataProvider() = ListDataProvider(SimpleGridBean("Marco"), SimpleGridBean("Francesco"))
+    fun middleNameDataProvider(): ListDataProvider<out Identifiable> = ListDataProvider("Middle1", "Middle2")
     private val enhancedColumnsDataProvider = ListDataProvider(
-            SimpleThreePropertiesGridBean("Marco", "Manzi", "midName"),
-            SimpleThreePropertiesGridBean("Francesco", "Manzi", "midName"))
+            WithDataProviderThreePropertiesGridBean("Marco", "Manzi", "Middle1Bean"),
+            WithDataProviderThreePropertiesGridBean("Francesco", "Manzi", "Middle2Bean"))
 
     private val gridWithMapAsBackendDataProvider = ListDataProvider(
-            mutableMapOf(Pair("name", "Marco"), Pair("surname", "Manzi"), Pair("middleName", "midName")),
-            mutableMapOf(Pair("name", "Francesco"), Pair("surname", "Manzi"), Pair("middleName", "midName")))
+            mutableMapOf(Pair("name", "Marco"), Pair("surname", "Manzi"), Pair("middleName", "Middle1"), Pair("middleNameDataProvider", middleNameDataProvider())),
+            mutableMapOf(Pair("name", "Francesco"), Pair("surname", "Manzi"), Pair("middleName", "Middle1"), Pair("middleNameDataProvider", middleNameDataProvider())))
 
 
     fun gridEnhancedColumnsDataProvider() = enhancedColumnsDataProvider
     fun gridWithMapAsBackendDataProvider() = gridWithMapAsBackendDataProvider
     fun addColumnClicked(ui: EternalUI<GridDomains>): EternalUI<GridDomains> = ui.apply {
-        enhancedColumnsDataProvider.addElement(SimpleThreePropertiesGridBean("", "", ""))
+        enhancedColumnsDataProvider.addElement(WithDataProviderThreePropertiesGridBean("", "", ""))
         ui.refresh("gridEnhancedColumns")
     }
     fun removeColumnClicked(ui: EternalUI<GridDomains>): EternalUI<GridDomains> = ui.apply {
@@ -74,6 +79,7 @@ class SimpleListGrid: Page<GridDomains>(
         }
         ui.refresh("gridEnhancedColumns")
     }
+
 }
 data class SimpleGridBean(val name: String): Identifiable {
     override fun getUiId(): String = name
@@ -87,8 +93,16 @@ data class SimpleThreePropertiesGridBean(val name: String, val surname: String, 
     override fun getUiId(): String = uuid
 }
 
+data class WithDataProviderThreePropertiesGridBean(val name: String, val surname: String, val middleName: Message,
+                                                   val middleNameDataProvider: DataProvider<out Identifiable> = ListDataProvider("Middle1Bean", "Middle2Bean"),
+                                                   val uuid: String = UUID.randomUUID().toString()): Identifiable {
+    override fun getUiId(): String = uuid
+
+    constructor(name: String, surname: String, middleName: String): this(name, surname, Message(middleName))
+}
+
 data class GridDomains(val gridSingle: SimpleGridBean? = null,
                        val gridMulti: Set<SimpleGridBean>? = null,
-                       val gridEnhancedColumns: Set<SimpleThreePropertiesGridBean>? = null,
+                       val gridEnhancedColumns: Set<WithDataProviderThreePropertiesGridBean>? = null,
                        val gridWithMapAsBackend: MutableMap<String, Any?>? = null,
                        val metadata: MutableMap<String, Any?>? = null)

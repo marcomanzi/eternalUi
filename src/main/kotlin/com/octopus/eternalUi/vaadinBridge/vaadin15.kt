@@ -1,6 +1,7 @@
 package com.octopus.eternalUi.vaadinBridge
 
 import com.octopus.eternalUi.domain.*
+import com.octopus.eternalUi.domain.db.DataProvider
 import com.octopus.eternalUi.domain.db.DataProviderWrapper
 import com.octopus.eternalUi.domain.db.Identifiable
 import com.octopus.eternalUi.domain.db.Message
@@ -217,6 +218,23 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
                     addValueChangeListener { v -> (item as MutableMap<String, Any?>)[key] = v.value }
                     setValue(item[key], this)
                 } else {
+                    val f = item.javaClass.getDeclaredField(key)
+                    f.isAccessible = true
+                    addValueChangeListener { v -> f.set(item, v.value) }
+                    setValue(f.get(item), this)
+                }
+            } }),
+            Pair(ComboBox::class.java, { item, key, grid, it -> (it as ComboBox<Identifiable>).apply {
+                label = ""
+                if (item is Map<*, *>) {
+                    addDataProviderToSelect(this, (item as MutableMap<String, Any?>)[key + "DataProvider"] as DataProvider<out Identifiable>)
+                    addValueChangeListener { v -> (item as MutableMap<String, Any?>)[key] = v.value }
+                    setValue(item[key], this)
+                } else {
+                    val dataProvider = item.javaClass.getDeclaredField(key + "DataProvider")
+                    dataProvider.isAccessible = true
+                    addDataProviderToSelect(this, dataProvider.get(item) as DataProvider<out Identifiable>)
+
                     val f = item.javaClass.getDeclaredField(key)
                     f.isAccessible = true
                     addValueChangeListener { v -> f.set(item, v.value) }

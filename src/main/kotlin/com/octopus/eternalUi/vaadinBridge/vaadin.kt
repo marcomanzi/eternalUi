@@ -400,7 +400,7 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
 
     fun setReadOnly(componentId: String) = elementsHandler.setReadOnly(getComponentById(componentId), true)
 
-    fun setNotReadOnly(componentId: String) = elementsHandler.setReadOnly(getComponentById(componentId), true)
+    fun setNotReadOnly(componentId: String) = elementsHandler.setReadOnly(getComponentById(componentId), false)
 
     companion object {
         val keysInSession = mutableListOf<String>()
