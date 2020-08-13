@@ -276,7 +276,7 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
 
     override fun addValueChangeListener(component: Component, listener: (Any?) -> Unit) {
         when(component) {
-            is ComboBox<*> -> component.addValueChangeListener { listener.invoke(it.value) }
+            is ComboBox<*> -> component.addValueChangeListener { if (it.oldValue?.toString()?:"" != it.value?.toString()?:"") listener.invoke(it.value) }
             is VaadinGrid<*> -> component.addSelectionListener { if (it.isFromClient) listener.invoke(it.allSelectedItems) }
             else -> (component as AbstractField<*, *>).addValueChangeListener { field ->
                 field.value.let { newValue -> listener.invoke(newValue) } }
@@ -285,7 +285,7 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
 
     override fun addOnChangeAction(component: Component, listener: (Any) -> Unit) {
         when(component) {
-            is ComboBox<*> -> component.addValueChangeListener { listener.invoke(it.value) }
+            is ComboBox<*> -> component.addValueChangeListener { if (it.oldValue?.toString()?:"" != it.value?.toString()?:"") listener.invoke(it.value) }
             is VaadinGrid<*> -> component.addSelectionListener { listener.invoke(it.allSelectedItems) }
             else -> (component as AbstractField<*, *>).addValueChangeListener { listener.invoke(it.value) }
         }
