@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component
 @UIScope
 @JsModule("./example-style.js")
 @PreserveOnRefresh
+@Push
 class HomeView(@Autowired var home: Home): EternalUI<EmptyDomain>(home)
 
 @Component

@@ -38,7 +38,7 @@ class ComponentHandler {
                 is NumberField -> componentById.value = fieldValue?.let { return@let it as Double}
                 is IntegerField -> componentById.value = fieldValue?.let { return@let it as Int}
                 is BigDecimalField -> componentById.value = fieldValue?.let { return@let it as BigDecimal}
-                is ComboBox<*> -> if (fieldValue != null && fieldValue.toString() != "") componentById.value = Message(fieldValue.toString())
+                is ComboBox<*> -> if (fieldValue != null) componentById.value = fieldValue
                 is Grid<*> -> setValueOnGrid(componentById, fieldValue)
                 is RadioButtonGroup<*> -> componentById.value = Message(fieldValue.toString())
                 is Checkbox -> componentById.value = fieldValue.toString().toBoolean()

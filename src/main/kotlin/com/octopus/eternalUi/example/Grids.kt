@@ -4,7 +4,7 @@ import com.octopus.eternalUi.domain.*
 import com.octopus.eternalUi.domain.db.DataProvider
 import com.octopus.eternalUi.domain.db.Identifiable
 import com.octopus.eternalUi.domain.db.ListDataProvider
-import com.octopus.eternalUi.domain.db.Message
+import com.octopus.eternalUi.example.SimpleListGrid.MessageEnhanced
 import com.octopus.eternalUi.vaadinBridge.EternalUI
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
@@ -43,7 +43,8 @@ class SimpleListGrid: Page<GridDomains>(
                 }),
                 Label(""),
                 Label("Grid with a maps as backend"),
-                Grid("gridWithMapAsBackend", Map::class, listOf("name", "middleName", "surname"), gridConfiguration = GridConfiguration(
+                HorizontalContainer(Button("addColumnToMapGrid")),
+                Grid("gridWithMapAsBackend", Map::class, listOf("middleName", "surname"), gridConfiguration = GridConfiguration(
                         mapOf<String, UIComponent>(
                                 Pair("surname", Input("surname", InputType.Text)),
                                 Pair("middleName", Input("middleName", InputType.Select)))
@@ -57,7 +58,16 @@ class SimpleListGrid: Page<GridDomains>(
     fun gridSingleDataProvider() = ListDataProvider(SimpleGridBean("Marco"), SimpleGridBean("Francesco"))
     fun gridMultiDataProvider() = ListDataProvider(SimpleGridBean("Marco"), SimpleGridBean("Francesco"))
     fun gridNoneDataProvider() = ListDataProvider(SimpleGridBean("Marco"), SimpleGridBean("Francesco"))
-    fun middleNameDataProvider(): ListDataProvider<out Identifiable> = ListDataProvider("Middle1", "Middle2")
+    data class MessageEnhanced(val message: String, val id: String = UUID.randomUUID().toString()): Identifiable {
+        override fun getUiId(): kotlin.String {
+            return id
+        }
+
+        override fun toString(): String {
+            return message
+        }
+    }
+    fun middleNameDataProvider(): ListDataProvider<out Identifiable> = ListDataProvider(MessageEnhanced("Middle1"), MessageEnhanced("Middle2"))
     private val enhancedColumnsDataProvider = ListDataProvider(
             WithDataProviderThreePropertiesGridBean("Marco", "Manzi", "Middle1Bean"),
             WithDataProviderThreePropertiesGridBean("Francesco", "Manzi", "Middle2Bean"))
@@ -77,9 +87,13 @@ class SimpleListGrid: Page<GridDomains>(
         page.pageDomain.dataClass.gridEnhancedColumns?.let { list ->
             list.forEach { enhancedColumnsDataProvider.removeElement(it) }
         }
+        page.pageDomain = PageDomain(page.pageDomain.dataClass.copy(gridEnhancedColumns = null))
         ui.refresh("gridEnhancedColumns")
     }
-
+    fun addColumnToMapGridClicked(ui: EternalUI<GridDomains>): EternalUI<GridDomains> = ui.apply {
+        gridWithMapAsBackendDataProvider.addElement(mutableMapOf(Pair("name", ""), Pair("surname", ""), Pair("middleName", ""), Pair("middleNameDataProvider", middleNameDataProvider())))
+        ui.refresh("gridWithMapAsBackend")
+    }
 }
 data class SimpleGridBean(val name: String): Identifiable {
     override fun getUiId(): String = name
@@ -93,16 +107,16 @@ data class SimpleThreePropertiesGridBean(val name: String, val surname: String, 
     override fun getUiId(): String = uuid
 }
 
-data class WithDataProviderThreePropertiesGridBean(val name: String, val surname: String, val middleName: Message,
-                                                   val middleNameDataProvider: DataProvider<out Identifiable> = ListDataProvider("Middle1Bean", "Middle2Bean"),
+data class WithDataProviderThreePropertiesGridBean(val name: String, val surname: String, val middleName: MessageEnhanced,
+                                                   val middleNameDataProvider: DataProvider<out Identifiable> = ListDataProvider(MessageEnhanced("Middle1Bean"), MessageEnhanced("Middle2Bean")),
                                                    val uuid: String = UUID.randomUUID().toString()): Identifiable {
     override fun getUiId(): String = uuid
 
-    constructor(name: String, surname: String, middleName: String): this(name, surname, Message(middleName))
+    constructor(name: String, surname: String, middleName: String): this(name, surname, MessageEnhanced(middleName), uuid = UUID.randomUUID().toString())
 }
 
 data class GridDomains(val gridSingle: SimpleGridBean? = null,
                        val gridMulti: Set<SimpleGridBean>? = null,
-                       val gridEnhancedColumns: Set<WithDataProviderThreePropertiesGridBean>? = null,
+                       val gridEnhancedColumns: MutableSet<WithDataProviderThreePropertiesGridBean>? = null,
                        val gridWithMapAsBackend: MutableMap<String, Any?>? = null,
                        val metadata: MutableMap<String, Any?>? = null)

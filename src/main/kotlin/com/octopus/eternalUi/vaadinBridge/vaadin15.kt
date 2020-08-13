@@ -29,6 +29,7 @@ import com.vaadin.flow.router.RouterLink
 import com.vaadin.flow.server.InputStreamFactory
 import com.vaadin.flow.server.StreamResource
 import java.util.*
+import kotlin.concurrent.schedule
 import kotlin.streams.asSequence
 import com.vaadin.flow.component.grid.Grid as VaadinGrid
 import com.vaadin.flow.component.html.Label as VaadinLabel
@@ -275,7 +276,7 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
 
     override fun addValueChangeListener(component: Component, listener: (Any?) -> Unit) {
         when(component) {
-            is ComboBox<*> -> component.addValueChangeListener { listener.invoke((it.value?:"").toString()) }
+            is ComboBox<*> -> component.addValueChangeListener { listener.invoke(it.value) }
             is VaadinGrid<*> -> component.addSelectionListener { if (it.isFromClient) listener.invoke(it.allSelectedItems) }
             else -> (component as AbstractField<*, *>).addValueChangeListener { field ->
                 field.value.let { newValue -> listener.invoke(newValue) } }
@@ -329,7 +330,11 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
     override fun refresh(component: Component) {
         when (component) {
             is ComboBox<*> -> component.dataProvider.refreshAll()
-            is VaadinGrid<*> -> component.dataProvider.refreshAll()
+            is VaadinGrid<*> -> {
+                component.dataProvider.refreshAll()
+                val current = UI.getCurrent()
+                Timer().schedule(100) { current.access { component.dataProvider.refreshAll() } }
+            }
         }
     }
 

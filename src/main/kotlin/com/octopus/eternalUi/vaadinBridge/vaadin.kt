@@ -6,6 +6,7 @@ import com.octopus.eternalUi.domain.db.AbstractDomainAwareDataProvider
 import com.octopus.eternalUi.domain.db.Identifiable
 import com.vaadin.flow.component.Component
 import com.vaadin.flow.component.HasComponents
+import com.vaadin.flow.component.UI
 import com.vaadin.flow.component.html.Div
 import com.vaadin.flow.router.BeforeEnterEvent
 import com.vaadin.flow.router.BeforeEnterObserver
@@ -13,6 +14,7 @@ import java.io.InputStream
 import java.lang.reflect.Method
 import java.util.*
 import kotlin.NoSuchElementException
+import kotlin.concurrent.schedule
 
 interface VaadinElementsHandler {
     fun cleanView(component: Component)
