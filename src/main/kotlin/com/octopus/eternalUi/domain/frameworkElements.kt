@@ -6,7 +6,6 @@ import java.util.*
 
 interface UIDomain
 interface UIBackend
-interface UIPresenter
 interface Rule<T: Any>
 
 abstract class UIComponent(val id: String, var cssClassName: String = "", val containedUIComponents : MutableList<UIComponent> = mutableListOf(),
@@ -22,10 +21,6 @@ abstract class UIComponent(val id: String, var cssClassName: String = "", val co
         return getUIComponentIdsRecursive(this)
     }
 }
-
-open class PageController<T: Any>(val actions: MutableList<Action<T>> = mutableListOf(),
-                                  val enabledRules: MutableList<Rule<T>> = mutableListOf(),
-                                  val uiDataProviders: MutableList<UiDataProvider<out Identifiable>> = mutableListOf()): UIPresenter
 
 open class PageDomain<T: Any>(val dataClass: T):UIDomain
 

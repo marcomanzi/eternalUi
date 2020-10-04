@@ -122,7 +122,7 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
             Pair(InputNumberType.Integer, { it -> integerField(it.asInputNumber()) }),
             Pair(InputNumberType.BigDecimal, { it -> BigDecimalField(UtilsUI.captionFromId(it.asInputNumber().caption)).apply { valueChangeMode = ValueChangeMode.EAGER } }),
             Pair(InputNumberType.Currency, { it -> BigDecimalField(UtilsUI.captionFromId(it.asInputNumber().caption)).apply { valueChangeMode = ValueChangeMode.EAGER
-                addThemeVariants(TextFieldVariant.LUMO_ALIGN_RIGHT);
+                addThemeVariants(TextFieldVariant.LUMO_ALIGN_RIGHT)
                 prefixComponent = Icon(VaadinIcon.EURO)
             }})
     )
@@ -164,10 +164,10 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
         }
     }
 
-    override fun setCaption(component: Component, caption: String) {
+    override fun setCaption(componentById: Component, caption: String) {
         fun methodOrNull(component: Component, methodName: String) =
                 component::class.java.methods.firstOrNull { it.name == methodName }
-        methodOrNull(component, "setLabel")?: methodOrNull(component, "setText")?.invoke(component, caption)
+        methodOrNull(componentById, "setLabel")?: methodOrNull(componentById, "setText")?.invoke(componentById, caption)
     }
 
     override fun removeComponent(componentById: Component) {
@@ -213,7 +213,7 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
     }
 
     private val componentSetupForGrid: Map<Class<out Component>, (Any, String, VaadinGrid<Any>, Component) -> Unit > = mapOf(
-            Pair(TextField::class.java, { item, key, grid, it -> (it as TextField).apply {
+            Pair(TextField::class.java, { item, key, _, it -> (it as TextField).apply {
                 label = ""
                 if (item is Map<*, *>) {
                     addValueChangeListener { v -> (item as MutableMap<String, Any?>)[key] = v.value }
@@ -225,11 +225,11 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
                     setValue(f.get(item), this)
                 }
             } }),
-            Pair(ComboBox::class.java, { item, key, grid, it -> (it as ComboBox<Identifiable>).apply {
+            Pair(ComboBox::class.java, { item, key, _, it -> (it as ComboBox<Identifiable>).apply {
                 label = ""
                 if (item is Map<*, *>) {
                     addDataProviderToSelect(this, (item as MutableMap<String, Any?>)[key + "DataProvider"] as DataProvider<out Identifiable>)
-                    addValueChangeListener { v -> (item as MutableMap<String, Any?>)[key] = v.value }
+                    addValueChangeListener { v -> item[key] = v.value }
                     setValue(item[key], this)
                 } else {
                     val dataProvider = item.javaClass.getDeclaredField(key + "DataProvider")
@@ -307,7 +307,7 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
         (componentById as Anchor).setHref(StreamResource(action.fileNameGenerator(domain), InputStreamFactory { action.onDataDomainInputStream(domain) }))
     }
 
-    override fun addDataProviderTo(uiComponent: UIComponent, component: Component, dataProvider: com.octopus.eternalUi.domain.db.DataProvider<out Identifiable>) {
+    override fun addDataProviderTo(uiComponent: UIComponent, component: Component, dataProvider: DataProvider<out Identifiable>) {
         when(component) {
             is ComboBox<*> -> addDataProviderToSelect(component as ComboBox<Identifiable>, dataProvider)
             is RadioButtonGroup<*> -> addDataProviderToRadioButtonGroup(component as RadioButtonGroup<Identifiable>, dataProvider)
@@ -315,15 +315,15 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
         }
     }
 
-    private fun addDataProviderToRadioButtonGroup(radioButtonGroup: RadioButtonGroup<Identifiable>, dataProvider: com.octopus.eternalUi.domain.db.DataProvider<out Identifiable>) {
+    private fun addDataProviderToRadioButtonGroup(radioButtonGroup: RadioButtonGroup<Identifiable>, dataProvider: DataProvider<out Identifiable>) {
         radioButtonGroup.dataProvider = DataProviderWrapper<Identifiable>(dataProvider)
     }
 
-    private fun addDataProviderToSelect(select: ComboBox<Identifiable>, dataProvider: com.octopus.eternalUi.domain.db.DataProvider<out Identifiable>) {
+    private fun addDataProviderToSelect(select: ComboBox<Identifiable>, dataProvider: DataProvider<out Identifiable>) {
         select.setDataProvider(DataProviderWrapper<Identifiable>(dataProvider))
     }
 
-    private fun addDataProviderToGrid(grid: VaadinGrid<out Identifiable>, dataProvider: com.octopus.eternalUi.domain.db.DataProvider<out Identifiable>) {
+    private fun addDataProviderToGrid(grid: VaadinGrid<out Identifiable>, dataProvider: DataProvider<out Identifiable>) {
         grid.dataProvider = DataProviderWrapper<Identifiable>(dataProvider)
     }
 

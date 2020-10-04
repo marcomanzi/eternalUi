@@ -6,15 +6,12 @@ import com.octopus.eternalUi.domain.db.AbstractDomainAwareDataProvider
 import com.octopus.eternalUi.domain.db.Identifiable
 import com.vaadin.flow.component.Component
 import com.vaadin.flow.component.HasComponents
-import com.vaadin.flow.component.UI
 import com.vaadin.flow.component.html.Div
 import com.vaadin.flow.router.BeforeEnterEvent
 import com.vaadin.flow.router.BeforeEnterObserver
 import java.io.InputStream
 import java.lang.reflect.Method
 import java.util.*
-import kotlin.NoSuchElementException
-import kotlin.concurrent.schedule
 
 interface VaadinElementsHandler {
     fun cleanView(component: Component)
@@ -90,14 +87,14 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
     }
 
     private fun setActionsAndDataProvidersToApply() {
-        page.pageController.uiDataProviders.forEach { it.toApply = true }
-        page.pageController.actions.forEach { it.toApply = true }
+        page.controller.uiDataProviders.forEach { it.toApply = true }
+        page.controller.actions.forEach { it.toApply = true }
     }
 
     private fun setActionsAndDataProvidersToApply(uiComponent: UIComponent) {
         val ids = uiComponent.getUIComponentsIds()
-        page.pageController.uiDataProviders.filter { ids.contains(it.forComponentId) }.forEach { it.toApply = true }
-        page.pageController.actions.filter { ids.contains(it.onComponentId) }.forEach { it.toApply = true }
+        page.controller.uiDataProviders.filter { ids.contains(it.forComponentId) }.forEach { it.toApply = true }
+        page.controller.actions.filter { ids.contains(it.onComponentId) }.forEach { it.toApply = true }
     }
 
     fun addComponent(nearComponentId: String, uiComponent: UIComponent) {
@@ -142,7 +139,7 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
     }
 
     private fun removeActionsDataProvidersWithoutUIComponent() {
-        page.pageController.uiDataProviders.removeIf { isThereComponentById(it.forComponentId).not() }
+        page.controller.uiDataProviders.removeIf { isThereComponentById(it.forComponentId).not() }
     }
 
     private fun applyStileApplierFunction() {
@@ -225,14 +222,14 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
         }
     }
 
-    private fun linkDataProviderFiltersToComponents() = page.pageController.uiDataProviders.forEach { it.filterIds.forEach { filterId -> linkFieldToFilters(filterId) } }
+    private fun linkDataProviderFiltersToComponents() = page.controller.uiDataProviders.forEach { it.filterIds.forEach { filterId -> linkFieldToFilters(filterId) } }
 
     private fun linkFieldToFilters(fieldName: String) {
         try {
             if (isThereComponentById(fieldName)) {
                 val componentById = getComponentById(fieldName)
                 elementsHandler.addValueChangeListener(componentById) { value ->
-                    page.pageController.uiDataProviders.forEach {
+                    page.controller.uiDataProviders.forEach {
                         it.applyFilterValueToDataProvider(fieldName, value)
                         elementsHandler.refresh(getComponentById(it.forComponentId))
                     }
@@ -244,7 +241,7 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
     }
 
     private fun linkDataProviderFiltersToDomain() {
-        page.pageController.uiDataProviders.forEach { it.filterIds.forEach { filterId ->
+        page.controller.uiDataProviders.forEach { it.filterIds.forEach { filterId ->
             page.getFieldValue(filterId)?.let { value -> it.applyFilterValueToDataProvider(filterId, value) }
         }}
     }
@@ -260,7 +257,7 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
     }
 
     private fun activateRestrictionsOnComponents() {
-        page.pageController.enabledRules.forEach { activateRuleOnPage(it) }
+        page.controller.enabledRules.forEach { activateRuleOnPage(it) }
     }
 
     private fun activateRuleOnPage(rule: Rule<T>) {
@@ -270,14 +267,14 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
     }
 
     private fun activateActionsOnComponents() {
-        page.pageController.actions.forEach { activateActionOnPage(it) }
+        page.controller.actions.forEach { activateActionOnPage(it) }
     }
 
     private fun addActionsDataProvidersFromMethodsAndNamingConvention(page: Page<T>) =
             uiComponentToVaadinComponent.keys.forEach { addActionsDataProvidersFromMethodsAndNamingConvention(page, it) }
 
     private fun addActionsDataProvidersFromMethodsAndNamingConvention(page: Page<T>, uiComponent: UIComponent) {
-        val controller = page.pageController
+        val controller = page.controller
         val domain = page.pageDomain.dataClass.javaClass
         createActionsDataProviderFromMethods(controller, uiComponent, page, domain)
         createActionsDataProviderFromMethods(page, uiComponent, page, domain)
@@ -288,15 +285,15 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
         fun MutableList<Action<T>>.addWithCheck(toAdd: Action<T>) { if (this.none { it.id == toAdd.id }) this.add(toAdd) }
         fun methodActionDataProviderId(m: Method, componentId: String) = "${m.name}-$componentId"
         controller.javaClass.methods.firstOrNull { m -> m.name == it.id + "DataProvider" }?.let { m ->
-            page.pageController.uiDataProviders.addWithCheck(when {
-                m.returnType.name == UiDataProvider::class.java.name -> (m.invoke(controller) as UiDataProvider<out Identifiable>).let { dp ->
+            page.controller.uiDataProviders.addWithCheck(when (m.returnType.name) {
+                UiDataProvider::class.java.name -> (m.invoke(controller) as UiDataProvider<out Identifiable>).let { dp ->
                     UiDataProvider(it.id, dp.dataProvider, dp.refreshRule, *dp.filterIds, methodActionDataProviderId(m, it.id))
                 }
                 else -> UiDataProvider(it.id, m.invoke(controller) as AbstractDataProvider<out Identifiable>, id = methodActionDataProviderId(m, it.id))
             })
         }
         controller.javaClass.methods.firstOrNull { m -> m.name == it.id + "Clicked" }?.let { m ->
-            page.pageController.actions.addWithCheck(when {
+            page.controller.actions.addWithCheck(when {
                 it is DownloadButton -> (m.invoke(controller, page.pageDomain.dataClass) as Pair<(T) -> String, (T) -> InputStream>).let { pair ->
                     DownloadAction(it.id, pair.first, pair.second, methodActionDataProviderId(m, it.id))
                 }
@@ -306,7 +303,7 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
             })
         }
         controller.javaClass.methods.firstOrNull { m -> m.name == it.id + "Changed" }?.let { m ->
-            page.pageController.actions.addWithCheck(when {
+            page.controller.actions.addWithCheck(when {
                 (m.parameterTypes.isNotEmpty() && (m.parameterTypes[0]?.name?:"").endsWith("EternalUI")) -> OnChangeUIAction(it.id, methodActionDataProviderId(m, it.id)) { ui -> m.invoke(controller, ui) as EternalUI<T> }
                 m.returnType.name == domain.name -> OnChangeAction(it.id, methodActionDataProviderId(m, it.id)) { ui -> m.invoke(controller, ui) as T }
                 else -> OnChangeReader(it.id, methodActionDataProviderId(m, it.id)) { ui -> m.invoke(controller, ui) as T }
@@ -353,7 +350,7 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
 
         fun refreshAfter(f: () -> Unit) {
             f.invoke()
-            page.pageController.uiDataProviders.forEach { refreshComponentsForDataProvider(it) }
+            page.controller.uiDataProviders.forEach { refreshComponentsForDataProvider(it) }
         }
         return { refreshAfter(it) }
     }
@@ -385,7 +382,7 @@ open class EternalUI<T: Any>(var page: Page<T>): Div(), BeforeEnterObserver {
     }
 
     private fun activateDataProvidersOnComponents() {
-        page.pageController.uiDataProviders.filter { it.toApply }.forEach { dataProvider ->
+        page.controller.uiDataProviders.filter { it.toApply }.forEach { dataProvider ->
             if (dataProvider.dataProvider is AbstractDomainAwareDataProvider<*>) dataProvider.dataProvider.domain = page.pageDomain.dataClass
             elementsHandler.addDataProviderTo(getUIComponentById(dataProvider.forComponentId), getComponentById(dataProvider.forComponentId), dataProvider.dataProvider)
             dataProvider.toApply = false
