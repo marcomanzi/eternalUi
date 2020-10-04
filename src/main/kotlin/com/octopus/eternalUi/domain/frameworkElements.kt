@@ -5,7 +5,6 @@ import com.octopus.eternalUi.vaadinBridge.EternalUI
 import java.util.*
 
 interface UIDomain
-interface UIBackend
 interface Rule<T: Any>
 
 abstract class UIComponent(val id: String, var cssClassName: String = "", val containedUIComponents : MutableList<UIComponent> = mutableListOf(),
@@ -23,8 +22,6 @@ abstract class UIComponent(val id: String, var cssClassName: String = "", val co
 }
 
 open class PageDomain<T: Any>(val dataClass: T):UIDomain
-
-open class PageBackend<T: Any>: UIBackend
 
 open class UiDataProvider<T: Identifiable>(val forComponentId: String = "", val dataProvider: com.octopus.eternalUi.domain.db.DataProvider<T>,
                                            val refreshRule: Rule<out Identifiable> = NoRule(), vararg val filterIds: String,
