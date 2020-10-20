@@ -7,17 +7,17 @@ import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Component
 
 @Component @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-class MessagesAndOtherUtils: Page<EmptyDomain>(
+class MessagesAndOtherUtils: Page(
         VerticalContainer(Button("showModalWindow"), Button("showConfirmDialog")),
-        pageDomain = PageDomain(EmptyDomain())
+        pageDomain = EmptyDomain()
 ) {
-    fun showModalWindowClicked(ui: EternalUI<EmptyDomain>):EternalUI<EmptyDomain> = ui.apply {
+    fun showModalWindowClicked(ui: EternalUI):EternalUI = ui.apply {
         EternalUI.showInUI(ModalWindow(SimplePage(), onClose = {
             EternalUI.showInUI(UserMessage("Closed called"))
         }))
     }
 
-    fun showConfirmDialogClicked(ui: EternalUI<EmptyDomain>):EternalUI<EmptyDomain> = ui.apply {
+    fun showConfirmDialogClicked(ui: EternalUI):EternalUI = ui.apply {
         EternalUI.showInUI(ConfirmDialog("Confirm Me", onOk = {
             EternalUI.showInUI(UserMessage("Ok called"))
         }, onCancel = {
@@ -26,9 +26,9 @@ class MessagesAndOtherUtils: Page<EmptyDomain>(
     }
 }
 
-class SimplePage: Page<EmptyDomain>(
+class SimplePage: Page(
         VerticalContainer(Label("Simple Page"), Button("closeTopModalWindow"))) {
-    fun closeTopModalWindowClicked(ui: EternalUI<EmptyDomain>):EternalUI<EmptyDomain> = ui.apply {
+    fun closeTopModalWindowClicked(ui: EternalUI):EternalUI = ui.apply {
         EternalUI.closeTopModalWindow()
     }
 }

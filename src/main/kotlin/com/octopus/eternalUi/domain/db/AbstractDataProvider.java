@@ -5,7 +5,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class AbstractDataProvider<T> implements DataProvider<T> {
+public abstract class AbstractDataProvider implements DataProvider {
 
     protected Map<String, Object> filters = new HashMap<>();
 
@@ -25,7 +25,7 @@ public abstract class AbstractDataProvider<T> implements DataProvider<T> {
     }
 
     @Override
-    public Collection<T> list() {
+    public Collection list() {
         return page(new Page(0, 100000), filters);
     }
 }

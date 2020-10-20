@@ -1,6 +1,6 @@
 package com.octopus.eternalUi.domain
 
-class AndRule<T: Any>(vararg val rules: Rule<T>): Rule<T>
-class OrRule<T: Any>(vararg val rules: Rule<T>): Rule<T>
-class WasInteractedWith<T: Any>(val interactedComponentId: String): Rule<T>
-class NoRule<T: Any>: Rule<T>
+class AndRule(vararg val rules: Rule): Rule
+class OrRule(vararg val rules: Rule): Rule
+class WasInteractedWith(val interactedComponentId: String): Rule
+class NoRule: Rule

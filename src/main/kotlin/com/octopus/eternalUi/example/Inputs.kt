@@ -12,27 +12,27 @@ import org.springframework.stereotype.Component
 import java.time.LocalDate
 
 @Component @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-class SimpleInputs: Page<EmptyDomain>(
+class SimpleInputs: Page(
         VerticalContainer(
                 HorizontalContainer(Input("text"), Input("textArea", InputType.TextArea), Input("password", InputType.Password), Input("select", InputType.Select), Input("date", InputType.Date)),
                 HorizontalContainer(Input("radio", InputType.Radio), Input("select", InputType.Checkbox))),
-        pageDomain = PageDomain(EmptyDomain())
+        pageDomain = EmptyDomain()
 ) {
-    fun selectDataProvider() = ListDataProvider<Message>("selectChoice1", "selectChoice2")
-    fun radioDataProvider() = ListDataProvider<Message>("radioChoice1", "radioChoice2")
+    fun selectDataProvider() = ListDataProvider("selectChoice1", "selectChoice2")
+    fun radioDataProvider() = ListDataProvider("radioChoice1", "radioChoice2")
 }
 
 @Component @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-class SimpleForm: Page<SimpleFormData>(
+class SimpleForm: Page(
         VerticalContainer(
                 HorizontalContainer(Input("name"), Input("surname"), Input("age", InputType.Date),
                 Input("preferredFood", InputType.Radio), Input("newUser", InputType.Checkbox)),
                 Button("showFormData", _cssClassName = "red"),
                 Button("prefillForm")
         ),
-        pageDomain = PageDomain(SimpleFormData())
+        pageDomain = SimpleFormData()
 ) {
-    fun preferredFoodDataProvider() = ListDataProvider<Message>("meat", "fish", "vegetables")
+    fun preferredFoodDataProvider() = ListDataProvider("meat", "fish", "vegetables")
 
     fun showFormDataClicked(simpleFormData: SimpleFormData): SimpleFormData = simpleFormData.apply {
         EternalUI.showInUI(UserMessage(this.toString()))

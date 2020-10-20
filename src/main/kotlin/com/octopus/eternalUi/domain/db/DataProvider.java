@@ -4,13 +4,13 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-public interface DataProvider<T> {
+public interface DataProvider {
 
     int count(Map<String, Object> filters);
 
-    List<T> page(Page page, Map<String, Object> filters);
+    List<Object> page(Page page, Map<String, Object> filters);
 
-    T find(T id);
+    Object find(Object id);
 
     void addFilter(String name, Object value);
 
@@ -18,5 +18,5 @@ public interface DataProvider<T> {
 
     void removeFilter(String name);
 
-    Collection<T> list();
+    Collection<Object> list();
 }

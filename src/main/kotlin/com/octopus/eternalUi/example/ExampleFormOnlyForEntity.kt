@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service
 import java.time.LocalDate
 
 @Component
-class ExampleFormOnlyForEntity(): Page<ExampleFormOnlyForEntityDomain>(
+class ExampleFormOnlyForEntity : Page(
         VerticalContainer(
                 Label("Example Eternal UI Simple Form", "h1"),
                 HorizontalContainer(Input("name", InputType.Text), Input("surname", InputType.Text)),
@@ -16,9 +16,9 @@ class ExampleFormOnlyForEntity(): Page<ExampleFormOnlyForEntityDomain>(
                 HorizontalContainer(InputNumber("pocketAmount", InputNumberType.Currency), InputNumber("conversionRate", step = 2)),
                 HorizontalContainer(Input("description", InputType.TextArea)),
                 Button("saveExampleForm", caption = "Example Save And Close Dialog")),
-        PageDomain(ExampleFormOnlyForEntityDomain())) {
+        ExampleFormOnlyForEntityDomain()) {
     fun withEntity(exampleFormOnlyForEntityDomain: ExampleFormOnlyForEntityDomain) = apply {
-        pageDomain = PageDomain(exampleFormOnlyForEntityDomain)
+        pageDomain = exampleFormOnlyForEntityDomain
     }
 
     fun saveExampleFormClicked(domain: ExampleFormOnlyForEntityDomain): ExampleFormOnlyForEntityDomain = domain.apply {

@@ -3,7 +3,6 @@ package com.octopus.eternalUi.vaadinBridge
 import com.octopus.eternalUi.domain.*
 import com.octopus.eternalUi.domain.db.DataProvider
 import com.octopus.eternalUi.domain.db.DataProviderWrapper
-import com.octopus.eternalUi.domain.db.Identifiable
 import com.octopus.eternalUi.domain.db.Message
 import com.octopus.eternalUi.vaadinBridge.vaadin15.ComponentHandler
 import com.vaadin.flow.component.*
@@ -153,9 +152,9 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
 
     private fun setupTabs(uiComponent: UIComponent, tabs: Tabs) {
         tabs.setSizeFull()
-        uiComponent.containedUIComponents.forEach { tabs.add(com.vaadin.flow.component.tabs.Tab((it as Tab<*>).caption)) }
+        uiComponent.containedUIComponents.forEach { tabs.add(com.vaadin.flow.component.tabs.Tab((it as Tab).caption)) }
         tabs.addSelectedChangeListener {
-            val tabToShow = uiComponent.containedUIComponents.first { ui -> (it.selectedTab.label == (ui as Tab<*>).caption) } as Tab<*>
+            val tabToShow = uiComponent.containedUIComponents.first { ui -> (it.selectedTab.label == (ui as Tab).caption) } as Tab
             it.selectedTab.parent.ifPresent { container ->
                 val tabsContainer = container.parent.get() as VerticalLayout
                 tabsContainer.remove(tabsContainer.children.asSequence().last())
@@ -180,6 +179,7 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
             GridSelectionType.MULTI -> VaadinGrid.SelectionMode.MULTI
             else -> VaadinGrid.SelectionMode.NONE
         })
+
         uiGrid.columns.filter { c -> grid.columns.map { it.key }.contains(c).not() }.forEach { columnName ->
             grid.addColumn { (it as Map<String, *>)[columnName] }.apply {
                 key = columnName
@@ -225,16 +225,16 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
                     setValue(f.get(item), this)
                 }
             } }),
-            Pair(ComboBox::class.java, { item, key, _, it -> (it as ComboBox<Identifiable>).apply {
+            Pair(ComboBox::class.java, { item, key, _, it -> (it as ComboBox<Any>).apply {
                 label = ""
                 if (item is Map<*, *>) {
-                    addDataProviderToSelect(this, (item as MutableMap<String, Any?>)[key + "DataProvider"] as DataProvider<out Identifiable>)
+                    addDataProviderToSelect(this, (item as MutableMap<String, Any?>)[key + "DataProvider"] as DataProvider)
                     addValueChangeListener { v -> item[key] = v.value }
                     setValue(item[key], this)
                 } else {
                     val dataProvider = item.javaClass.getDeclaredField(key + "DataProvider")
                     dataProvider.isAccessible = true
-                    addDataProviderToSelect(this, dataProvider.get(item) as DataProvider<out Identifiable>)
+                    addDataProviderToSelect(this, dataProvider.get(item) as DataProvider)
 
                     val f = item.javaClass.getDeclaredField(key)
                     f.isAccessible = true
@@ -303,28 +303,28 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
         }
     }
 
-    override fun <T : Any> addDownloadInputStream(action: DownloadAction<T>, domain: T, componentById: Component) {
+    override fun addDownloadInputStream(action: DownloadAction, domain: Any, componentById: Component) {
         (componentById as Anchor).setHref(StreamResource(action.fileNameGenerator(domain), InputStreamFactory { action.onDataDomainInputStream(domain) }))
     }
 
-    override fun addDataProviderTo(uiComponent: UIComponent, component: Component, dataProvider: DataProvider<out Identifiable>) {
+    override fun addDataProviderTo(uiComponent: UIComponent, component: Component, dataProvider: DataProvider) {
         when(component) {
-            is ComboBox<*> -> addDataProviderToSelect(component as ComboBox<Identifiable>, dataProvider)
-            is RadioButtonGroup<*> -> addDataProviderToRadioButtonGroup(component as RadioButtonGroup<Identifiable>, dataProvider)
-            is VaadinGrid<*> -> addDataProviderToGrid(component as VaadinGrid<Identifiable>, dataProvider)
+            is ComboBox<*> -> addDataProviderToSelect(component as ComboBox<Any>, dataProvider)
+            is RadioButtonGroup<*> -> addDataProviderToRadioButtonGroup(component as RadioButtonGroup<Any>, dataProvider)
+            is VaadinGrid<*> -> addDataProviderToGrid(component as VaadinGrid<Any>, dataProvider)
         }
     }
 
-    private fun addDataProviderToRadioButtonGroup(radioButtonGroup: RadioButtonGroup<Identifiable>, dataProvider: DataProvider<out Identifiable>) {
-        radioButtonGroup.dataProvider = DataProviderWrapper<Identifiable>(dataProvider)
+    private fun addDataProviderToRadioButtonGroup(radioButtonGroup: RadioButtonGroup<Any>, dataProvider: DataProvider) {
+        radioButtonGroup.dataProvider = DataProviderWrapper<Any>(dataProvider)
     }
 
-    private fun addDataProviderToSelect(select: ComboBox<Identifiable>, dataProvider: DataProvider<out Identifiable>) {
-        select.setDataProvider(DataProviderWrapper<Identifiable>(dataProvider))
+    private fun addDataProviderToSelect(select: ComboBox<Any>, dataProvider: DataProvider) {
+        select.setDataProvider(DataProviderWrapper<Any>(dataProvider))
     }
 
-    private fun addDataProviderToGrid(grid: VaadinGrid<out Identifiable>, dataProvider: DataProvider<out Identifiable>) {
-        grid.dataProvider = DataProviderWrapper<Identifiable>(dataProvider)
+    private fun addDataProviderToGrid(grid: VaadinGrid<Any>, dataProvider: DataProvider) {
+        grid.dataProvider = DataProviderWrapper<Any>(dataProvider)
     }
 
     override fun refresh(component: Component) {
@@ -342,17 +342,17 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
         (componentById as HasValueAndElement<*, *>).setReadOnly(readOnly)
     }
 
-    override fun refresh(component: Component, identifiable: Identifiable) {
+    override fun refresh(component: Component, identifiable: Any) {
         when (component) {
-            is ComboBox<*> -> (component as ComboBox<Identifiable>).dataProvider.refreshItem(identifiable)
-            is VaadinGrid<*> -> (component as VaadinGrid<Identifiable>).dataProvider.refreshItem(identifiable)
+            is ComboBox<*> -> (component as ComboBox<Any>).dataProvider.refreshItem(identifiable)
+            is VaadinGrid<*> -> (component as VaadinGrid<Any>).dataProvider.refreshItem(identifiable)
         }
     }
 
     private val dialogKeyInSession = "dialogKeyInSession"
     private val modalWindowInSession = "modalWindowInSession"
     private val confirmDialogKeyInSession = "confirmDialogKeyInSession"
-    override fun <T: Any> showModalWindow(modalWindow: ModalWindow<T>) {
+    override fun showModalWindow(modalWindow: ModalWindow) {
         if (UI.getCurrent().session.getAttribute(dialogKeyInSession) == null) {
             Dialog().apply {
                 val mainPageComponentForUI = EternalUI(modalWindow.page).prepareUI().mainPageComponentForUI()
@@ -385,8 +385,8 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
         if (UI.getCurrent().session.getAttribute(dialogKeyInSession) != null) {
             (UI.getCurrent().session.getAttribute(dialogKeyInSession) as Dialog).close()
             UI.getCurrent().session.setAttribute(dialogKeyInSession, null)
-            (UI.getCurrent().session.getAttribute(modalWindowInSession) as ModalWindow<Any>).apply {
-                onClose(page.pageDomain.dataClass)
+            (UI.getCurrent().session.getAttribute(modalWindowInSession) as ModalWindow).apply {
+                onClose(page.pageDomain)
             }
             UI.getCurrent().session.setAttribute(modalWindowInSession, null)
         }
