@@ -2,7 +2,7 @@ package com.octopus.eternalUi.domain.db;
 
 import java.util.Objects;
 
-public class Message implements Identifiable{
+public class Message {
     public String message;
 
     public Message(String message) {
@@ -10,11 +10,6 @@ public class Message implements Identifiable{
     }
 
     public String getMessage() {
-        return message;
-    }
-
-    @Override
-    public String getUiId() {
         return message;
     }
 

@@ -1,23 +1,23 @@
 package com.octopus.eternalUi.domain
 
+
 import com.octopus.eternalUi.domain.db.Message
 import com.octopus.eternalUi.vaadinBridge.EternalUI
 import com.vaadin.flow.component.Component
-import java.io.InputStream
 import java.util.*
 import kotlin.reflect.KClass
 
 open class VerticalContainer(vararg children: UIComponent, _id: String = UUID.randomUUID().toString(), _cssClassName: String = ""): UIComponent(_id, _cssClassName, containedUIComponents = children.asList().toMutableList()) {
-    constructor(id: String, vararg children: Tab<*>, cssClassName: String = ""): this(children = *children, _id = id, _cssClassName = cssClassName) {}
+    constructor(id: String, vararg children: Tab, cssClassName: String = ""): this(children = *children, _id = id, _cssClassName = cssClassName)
 }
 open class HorizontalContainer(vararg children: UIComponent, _id: String = UUID.randomUUID().toString(), _cssClassName: String = ""): UIComponent(_id, _cssClassName, containedUIComponents = children.asList().toMutableList()) {
-    constructor(id: String, vararg children: Tab<*>, cssClassName: String = ""): this(children = *children, _id = id, _cssClassName = cssClassName) {}
+    constructor(id: String, vararg children: Tab, cssClassName: String = ""): this(children = *children, _id = id, _cssClassName = cssClassName)
 }
-open class TabsContainer(vararg children: Tab<*>, _id: String = UUID.randomUUID().toString(), _cssClassName: String = ""): UIComponent(_id, _cssClassName, containedUIComponents = children.asList().toMutableList()) {
-    constructor(id: String, vararg children: Tab<*>, cssClassName: String = ""): this(children = *children, _id = id, _cssClassName = cssClassName) {}
+open class TabsContainer(vararg children: Tab, _id: String = UUID.randomUUID().toString(), _cssClassName: String = ""): UIComponent(_id, _cssClassName, containedUIComponents = children.asList().toMutableList()) {
+    constructor(id: String, vararg children: Tab, cssClassName: String = ""): this(children = *children, _id = id, _cssClassName = cssClassName)
 }
-open class Tab<T: Any>(val caption: String, val page: Page<T>, _id: String = UUID.randomUUID().toString(), _cssClassName: String = ""): UIComponent(_id, _cssClassName)
-open class ModalWindow<T: Any>(val page: Page<T>, _id: String = UUID.randomUUID().toString(), val onClose: (T) -> Unit = {}, _cssClassName: String = ""): UIComponent(_id, _cssClassName)
+open class Tab(val caption: String, val page: Page, _id: String = UUID.randomUUID().toString(), _cssClassName: String = ""): UIComponent(_id, _cssClassName)
+open class ModalWindow(val page: Page, _id: String = UUID.randomUUID().toString(), val onClose: (Any) -> Unit = {}, _cssClassName: String = ""): UIComponent(_id, _cssClassName)
 open class ConfirmDialog(val message: String, val onOk: () -> Unit, val onCancel: () -> Unit = {}, val okMessage: String = "Ok", val cancelMessage: String = "Cancel", _cssClassName: String = "", _id: String = UUID.randomUUID().toString()): UIComponent(_id, _cssClassName)
 open class File(val url: String, _id: String = UUID.randomUUID().toString()): UIComponent(_id)
 
@@ -50,12 +50,13 @@ enum class GridSelectionType { SINGLE, MULTI, NONE }
 open class EmptyDomain
 
 @Suppress("UNCHECKED_CAST")
-abstract class Page<T : Any>(val uiView: UIComponent, val pageController: PageController<T> = PageController(),
-                             var pageDomain: PageDomain<T> = PageDomain(EmptyDomain() as T), var set: Boolean = false,
-                             var beforeEnter: ((EternalUI<T>) -> T)? = null
+abstract class Page(val uiView: UIComponent, var pageDomain: Any = EmptyDomain(),
+                             var set: Boolean = false, var beforeEnter: ((EternalUI) -> Any)? = null
 ):
         UIComponent(UUID.randomUUID().toString(), pageDomain.javaClass.simpleName) {
     private val observers: MutableMap<String, (Any?) -> Unit> = mutableMapOf()
+    internal val controller: PageController = PageController()
+    fun <T: Any> domain(): T = pageDomain as T
     fun hasValues(vararg ids: String): Boolean = ids.all { getFieldValue(it).let { value -> value != null && value.toString().isNotEmpty() } }
     fun anyValue(vararg ids: String): Boolean = ids.any { getFieldValue(it).let { value -> value != null && value.toString().isNotEmpty() } }
     fun toDebugString(): String = fields().map { "$it: ${getFieldValue(it)}" }.joinToString { it }.replace(",", "</br>")
@@ -65,9 +66,9 @@ abstract class Page<T : Any>(val uiView: UIComponent, val pageController: PageCo
 
     fun getFieldValue(id: String): Any? {
         return try {
-            val field = pageDomain.dataClass.javaClass.getDeclaredField(id)
+            val field = pageDomain.javaClass.getDeclaredField(id)
             field.isAccessible = true
-            field.get(pageDomain.dataClass)
+            field.get(pageDomain)
         } catch (e: NoSuchFieldException) {
             null
         }
@@ -84,22 +85,22 @@ abstract class Page<T : Any>(val uiView: UIComponent, val pageController: PageCo
     }
 
     fun setFieldValue(id: String, value: Any?) {
-        val field = pageDomain.dataClass.javaClass.getDeclaredField(id)
+        val field = pageDomain.javaClass.getDeclaredField(id)
         field.isAccessible = true
         observers[id]?.invoke(value)
         if (field.type.name.toUpperCase().contains("SET")) {
             if (value is Collection<*>) {
-                field.set(pageDomain.dataClass, value)
+                field.set(pageDomain, value)
             } else {
-                field.set(pageDomain.dataClass, listOf(value))
+                field.set(pageDomain, listOf(value))
             }
         } else {
             when (value) {
-                null -> field.set(pageDomain.dataClass, value)
-                is Optional<*> -> if (value.isPresent) field.set(pageDomain.dataClass, value.get()) else field.set(pageDomain.dataClass, null)
-                is Message -> field.set(pageDomain.dataClass, value.message)
-                is Collection<*> -> if (value.isEmpty()) field.set(pageDomain.dataClass, null) else field.set(pageDomain.dataClass, value.first())
-                else -> field.set(pageDomain.dataClass, value)
+                null -> field.set(pageDomain, value)
+                is Optional<*> -> if (value.isPresent) field.set(pageDomain, value.get()) else field.set(pageDomain, null)
+                is Message -> field.set(pageDomain, value.message)
+                is Collection<*> -> if (value.isEmpty()) field.set(pageDomain, null) else field.set(pageDomain, value.first())
+                else -> field.set(pageDomain, value)
             }
         }
         setInMetadata(id, value)
@@ -107,13 +108,17 @@ abstract class Page<T : Any>(val uiView: UIComponent, val pageController: PageCo
 
     private fun setInMetadata(id: String, value: Any?) {
         try {
-            val metadata = pageDomain.dataClass.javaClass.getDeclaredField("metadata").let {
+            val metadata = pageDomain.javaClass.getDeclaredField("metadata").let {
                 it.isAccessible = true
-                return@let it.get(pageDomain.dataClass) as MutableMap<String, Any?>
+                return@let it.get(pageDomain) as MutableMap<String, Any?>
             }
             metadata[id] = value
         } catch (ex: Exception) {}
     }
 
-    fun fields(): List<String> = pageDomain.dataClass.javaClass.declaredFields.map { it.name }
+    fun fields(): List<String> = pageDomain.javaClass.declaredFields.map { it.name }
 }
+
+internal class PageController(val actions: MutableList<Action> = mutableListOf(),
+                                      val enabledRules: MutableList<Rule> = mutableListOf(),
+                                      val uiDataProviders: MutableList<UiDataProvider> = mutableListOf())

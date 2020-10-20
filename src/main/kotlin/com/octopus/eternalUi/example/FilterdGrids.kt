@@ -2,14 +2,14 @@ package com.octopus.eternalUi.example
 
 import com.octopus.eternalUi.domain.*
 import com.octopus.eternalUi.domain.db.AbstractDataProvider
-import com.octopus.eternalUi.domain.db.Identifiable
+
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Component
 import java.time.LocalDate
 
 @Component @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-class SimpleFilteredGrid: Page<GridDomains>(
+class SimpleFilteredGrid: Page(
         VerticalContainer(
                 Label("Single Filtered Grid"),
                 HorizontalContainer(Input("name"), Input("birth", InputType.Date)),
@@ -17,17 +17,17 @@ class SimpleFilteredGrid: Page<GridDomains>(
                     rowsToShow = 2
                 })
         ),
-        pageDomain = PageDomain(GridDomains())
+        pageDomain = GridDomains()
 ) {
 
-    fun gridFilteredSingleDataProvider() = UiDataProvider<SimpleHumanBean>("gridFilteredSingle", object: AbstractDataProvider<SimpleHumanBean>() {
+    fun gridFilteredSingleDataProvider() = UiDataProvider("gridFilteredSingle", object: AbstractDataProvider() {
         val elements = listOf(SimpleHumanBean("Marco", LocalDate.of(1983, 10, 17)), SimpleHumanBean("Francesco", LocalDate.of(2015, 11, 12)))
         override fun count(filters: MutableMap<String, Any>?): Int = elements.filter { elementsFilter(it, filters) }.count()
 
         override fun page(page: com.octopus.eternalUi.domain.db.Page?, filters: MutableMap<String, Any>?): MutableList<SimpleHumanBean> =
                 elements.filter { elementsFilter(it, filters) }.toMutableList()
 
-        override fun find(id: SimpleHumanBean?): SimpleHumanBean = id!!
+        override fun find(id: Any?): Any = id!!
 
     }, filterIds = *arrayOf("name", "birth"))
 
@@ -37,9 +37,4 @@ class SimpleFilteredGrid: Page<GridDomains>(
 
 }
 
-data class SimpleHumanBean(val name: String, val birth: LocalDate): Identifiable {
-    override fun getUiId(): String {
-        return name
-    }
-}
-
+data class SimpleHumanBean(val name: String, val birth: LocalDate)

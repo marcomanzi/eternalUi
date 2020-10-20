@@ -1,7 +1,7 @@
 package com.octopus.eternalUi.domain.db;
 
 
-public abstract class AbstractDomainAwareDataProvider<T extends Identifiable> extends AbstractDataProvider<T> {
+public abstract class AbstractDomainAwareDataProvider extends AbstractDataProvider {
 
     private Object domain;
 

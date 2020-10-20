@@ -6,9 +6,9 @@ import org.springframework.beans.BeanUtils;
 import java.util.stream.Stream;
 
 @SuppressWarnings("unchecked")
-public class DataProviderWrapper<T extends Identifiable> extends com.vaadin.flow.data.provider.AbstractDataProvider<T, String> {
+public class DataProviderWrapper<T> extends com.vaadin.flow.data.provider.AbstractDataProvider<T, String> {
 
-    private DataProvider<T> dataProvider;
+    private DataProvider dataProvider;
 
     public DataProviderWrapper(DataProvider dataProvider) {
         this.dataProvider = dataProvider;
@@ -26,15 +26,15 @@ public class DataProviderWrapper<T extends Identifiable> extends com.vaadin.flow
 
     @Override
     public Stream<T> fetch(Query<T, String> query) {
-        return dataProvider.page(new Page(query.getOffset() / query.getLimit(), query.getLimit()), dataProvider.getFilters()).stream();
+        return (Stream<T>) dataProvider.page(new Page(query.getOffset() / query.getLimit(), query.getLimit()), dataProvider.getFilters()).stream();
     }
 
     @Override
     public void refreshItem(T v) {
-        super.refreshItem(dataProvider.find(v));
+        super.refreshItem((T) dataProvider.find(v));
     }
 
-    public DataProvider<T> getDataProvider() {
+    public DataProvider getDataProvider() {
         return dataProvider;
     }
 }

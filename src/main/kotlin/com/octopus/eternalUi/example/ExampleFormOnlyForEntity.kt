@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service
 import java.time.LocalDate
 
 @Component
-class ExampleFormOnlyForEntity(@Autowired var exampleFormOnlyForEntityController: ExampleFormOnlyForEntityController): Page<ExampleFormOnlyForEntityDomain>(
+class ExampleFormOnlyForEntity : Page(
         VerticalContainer(
                 Label("Example Eternal UI Simple Form", "h1"),
                 HorizontalContainer(Input("name", InputType.Text), Input("surname", InputType.Text)),
@@ -16,23 +16,17 @@ class ExampleFormOnlyForEntity(@Autowired var exampleFormOnlyForEntityController
                 HorizontalContainer(InputNumber("pocketAmount", InputNumberType.Currency), InputNumber("conversionRate", step = 2)),
                 HorizontalContainer(Input("description", InputType.TextArea)),
                 Button("saveExampleForm", caption = "Example Save And Close Dialog")),
-        exampleFormOnlyForEntityController,
-        PageDomain(ExampleFormOnlyForEntityDomain())) {
+        ExampleFormOnlyForEntityDomain()) {
     fun withEntity(exampleFormOnlyForEntityDomain: ExampleFormOnlyForEntityDomain) = apply {
-        pageDomain = PageDomain(exampleFormOnlyForEntityDomain)
+        pageDomain = exampleFormOnlyForEntityDomain
     }
-}
 
-@Service
-class ExampleFormOnlyForEntityController(@Autowired var exampleFormOnlyForEntityBackend: ExampleFormOnlyForEntityBackend): PageController<ExampleFormOnlyForEntityDomain>(
-        actions = mutableListOf(OnClickAction("saveExampleForm") { exampleFormOnlyForEntityBackend.saveAndCloseDialog(it) }))
-
-data class ExampleFormOnlyForEntityDomain(val name: String = "", val surname: String = "", val age: Int = 18, val birthDate: LocalDate = LocalDate.now().minusYears(18), val description: String = "")
-
-@Service
-class ExampleFormOnlyForEntityBackend {
-    fun saveAndCloseDialog(exampleFormOnlyForEntityDomain: ExampleFormOnlyForEntityDomain) = exampleFormOnlyForEntityDomain.apply {
-        EternalUI.showInUI(UserMessage(exampleFormOnlyForEntityDomain.toString()))
+    fun saveExampleFormClicked(domain: ExampleFormOnlyForEntityDomain): ExampleFormOnlyForEntityDomain = domain.apply {
+        EternalUI.showInUI(UserMessage(domain.toString()))
         EternalUI.closeTopModalWindow()
     }
 }
+
+
+data class ExampleFormOnlyForEntityDomain(val name: String = "", val surname: String = "", val age: Int = 18, val birthDate: LocalDate = LocalDate.now().minusYears(18), val description: String = "")
+
