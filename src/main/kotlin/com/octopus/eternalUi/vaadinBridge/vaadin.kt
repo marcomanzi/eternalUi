@@ -14,7 +14,7 @@ import java.util.*
 
 interface VaadinElementsHandler {
     fun cleanView(component: Component)
-    fun createFor(uiComponent: UIComponent): Component
+    fun createFor(uiComponent: UIComponent, pageDomain: Any?): Component
     fun addToParent(parent: Component, children: List<Component>): Component
     fun addToParent(parent: Component, child: Component): Component = addToParent(parent, listOf(child))
     fun removeFromContainer(container: HasComponents)
@@ -64,25 +64,25 @@ open class EternalUI(var page: Page): Div(), BeforeEnterObserver {
 
     open fun customBehaviourOnEnter(eternalUI: EternalUI) {
         page.beforeEnter?.let { beforeEnter ->
-            page.pageDomain = beforeEnter(eternalUI)
+            page.pageDomain = beforeEnter(eternalUI.page)
         }
     }
 
     override fun beforeEnter(be: BeforeEnterEvent?) {
+        customBehaviourOnEnter(this)
         setActionsAndDataProvidersToApply()
         elementsHandler.getFromSession(domain_session_key)?.let {
             page.pageDomain = it
             elementsHandler.removeFromSession(domain_session_key)
         }
         elementsHandler.cleanView(this)
-        uiComponentToVaadinComponent = createMapUIComponentToVaadinComponent(page.uiView)
+        uiComponentToVaadinComponent = createMapUIComponentToVaadinComponent(page.uiView, page.pageDomain)
         setInContainerChildrenComponentForAllComponents()
         addMainUIToView()
         addActionsDataProvidersFromMethodsAndNamingConvention(page)
         setupConnectionsBetweenBackendAndUI()
 
         addDebugButton()
-        customBehaviourOnEnter(this)
     }
 
     private fun setActionsAndDataProvidersToApply() {
@@ -101,7 +101,7 @@ open class EternalUI(var page: Page): Div(), BeforeEnterObserver {
         val componentToAdd = if (uiComponent is TabsContainer) {
             VerticalContainer(uiComponent)
         } else { uiComponent }
-        val toAddComponent = createMapUIComponentToVaadinComponent(componentToAdd)
+        val toAddComponent = createMapUIComponentToVaadinComponent(componentToAdd, page.pageDomain)
         uiComponentToVaadinComponent = uiComponentToVaadinComponent + toAddComponent
         toAddComponent.keys.forEach { setInContainerChildrenComponent(it) }
         elementsHandler.addToParent(vaadinComponentForUi(getUIComponentById(nearComponentId)).parent.get(),
@@ -154,10 +154,10 @@ open class EternalUI(var page: Page): Div(), BeforeEnterObserver {
         if (debugModeActive && page.pageDomain !is EmptyDomain) elementsHandler.addToParent(vaadinComponentForUi(page.uiView), elementsHandler.debugButton { page.toDebugString() })
     }
 
-    private fun createMapUIComponentToVaadinComponent(uiComponent: UIComponent): Map<UIComponent, Component> {
-        val map = mapOf(Pair(uiComponent, elementsHandler.createFor(uiComponent)))
+    private fun createMapUIComponentToVaadinComponent(uiComponent: UIComponent, pageDomain: Any): Map<UIComponent, Component> {
+        val map = mapOf(Pair(uiComponent, elementsHandler.createFor(uiComponent, pageDomain)))
         return if (uiComponent.containedUIComponents.isNotEmpty())
-            map + uiComponent.containedUIComponents.map { createMapUIComponentToVaadinComponent(it) }
+            map + uiComponent.containedUIComponents.map { createMapUIComponentToVaadinComponent(it, page.pageDomain) }
                     .reduce { m1, m2 -> m1 + m2}
         else map
     }

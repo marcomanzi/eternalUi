@@ -10,7 +10,7 @@ import com.vaadin.flow.component.checkbox.Checkbox
 import com.vaadin.flow.component.combobox.ComboBox
 import com.vaadin.flow.component.datepicker.DatePicker
 import com.vaadin.flow.component.dialog.Dialog
-import com.vaadin.flow.component.html.Anchor
+import com.vaadin.flow.component.html.Anchor as VaadinAnchor
 import com.vaadin.flow.component.html.Div
 import com.vaadin.flow.component.icon.Icon
 import com.vaadin.flow.component.icon.VaadinIcon
@@ -23,6 +23,7 @@ import com.vaadin.flow.component.tabs.Tabs
 import com.vaadin.flow.component.textfield.*
 import com.vaadin.flow.data.renderer.ComponentRenderer
 import com.vaadin.flow.data.value.ValueChangeMode
+import com.vaadin.flow.dom.Style
 import com.vaadin.flow.function.SerializableFunction
 import com.vaadin.flow.router.RouterLink
 import com.vaadin.flow.server.InputStreamFactory
@@ -30,6 +31,7 @@ import com.vaadin.flow.server.StreamResource
 import java.util.*
 import kotlin.concurrent.schedule
 import kotlin.streams.asSequence
+import kotlin.streams.toList
 import com.vaadin.flow.component.grid.Grid as VaadinGrid
 import com.vaadin.flow.component.html.Label as VaadinLabel
 
@@ -37,11 +39,12 @@ import com.vaadin.flow.component.html.Label as VaadinLabel
 class Vaadin15UiElementsHandler : VaadinElementsHandler {
 
     override fun debugButton(toDebugStringSupplier: () -> String): Component =
-            com.vaadin.flow.component.button.Button("Debug").apply { addClickListener {
-                Dialog(VaadinLabel().apply { element.setProperty("innerHTML", toDebugStringSupplier()) }).apply {
-                    open()
-                    isCloseOnEsc = true
-                }}}
+        com.vaadin.flow.component.button.Button("Debug").apply { addClickListener {
+            Dialog(VaadinLabel().apply { element.setProperty("innerHTML", toDebugStringSupplier()) }).apply {
+                open()
+
+                isCloseOnEsc = true
+            }}}
 
     override fun switchCaptionTo(component: Component, newCaption: String) {
         ComponentHandler.switchCaptionTo(component, newCaption)
@@ -52,22 +55,22 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
     }
 
     override fun addToParent(parent: Component, children: List<Component>): Component =
-            if (parent is Tabs) {
-                parent.apply { parent.selectedIndex = 0 }
-            } else {
-                parent.apply {
-                    if (this is HorizontalLayout) {
-                        this.add(*children.toTypedArray())
-                        this.setVerticalComponentAlignment(FlexComponent.Alignment.END, *children.filterIsInstance<RadioButtonGroup<*>>().toTypedArray())
-                        children.filterIsInstance<Checkbox>().toTypedArray().let { checkBoxes ->
-                            checkBoxes.forEach { it.style.set("padding-bottom", "7px") }
-                            this.setVerticalComponentAlignment(FlexComponent.Alignment.END, *checkBoxes)
-                        }
-                    } else {
-                        (this as HasComponents).add(*children.toTypedArray())
+        if (parent is Tabs) {
+            parent.apply { parent.selectedIndex = 0 }
+        } else {
+            parent.apply {
+                if (this is HorizontalLayout) {
+                    this.add(*children.toTypedArray())
+                    this.setVerticalComponentAlignment(FlexComponent.Alignment.END, *children.filterIsInstance<RadioButtonGroup<*>>().toTypedArray())
+                    children.filterIsInstance<Checkbox>().toTypedArray().let { checkBoxes ->
+                        checkBoxes.forEach { it.style.set("padding-bottom", "7px") }
+                        this.setVerticalComponentAlignment(FlexComponent.Alignment.END, *checkBoxes)
                     }
+                } else {
+                    (this as HasComponents).add(*children.toTypedArray())
                 }
             }
+        }
 
     override fun removeFromContainer(container: HasComponents) {
         container.removeAll()
@@ -84,18 +87,22 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
     private fun UIComponent.asInput() = this as Input
     private fun UIComponent.asInputNumber() = this as InputNumber
     private val objectToVaadinCreator: Map<Class<out UIComponent>, (UIComponent) -> Component > = mapOf(
-            Pair(VerticalContainer::class.java, { _ -> VerticalLayout().apply { isSpacing = false; isMargin = false; setSizeFull() }}),
-            Pair(HorizontalContainer::class.java, { _ -> HorizontalLayout().apply { isMargin = false; setSizeFull() } }),
-            Pair(TabsContainer::class.java, { it -> Tabs().apply { setupTabs(it, this) } }),
-            Pair(Input::class.java, { it -> enumToVaadinCreator[it.asInput().type]?.invoke(it)?: Div() }),
-            Pair(InputNumber::class.java, { it -> enumToVaadinCreator[it.asInputNumber().type]?.invoke(it)?: Div() }),
-            Pair(Label::class.java, { it -> VaadinLabel((it as Label).caption).apply {
-                if (it.caption == "") height = "20px"
-            }}),
-            Pair(Button::class.java, { it -> com.vaadin.flow.component.button.Button((it as Button).caption) }),
-            Pair(DownloadButton::class.java, { it -> downloadButton(it as DownloadButton) }),
-            Pair(Grid::class.java, { it -> grid(it) }),
-            Pair(InsideAppLink::class.java, { it -> RouterLink((it as InsideAppLink).caption, it.uiViewClass) })
+        Pair(VerticalContainer::class.java, { _ -> VerticalLayout().apply { isSpacing = false; isMargin = false; setSizeFull() }}),
+        Pair(HorizontalContainer::class.java, { _ -> HorizontalLayout().apply { isMargin = false; setSizeFull() } }),
+        Pair(TabsContainer::class.java, { it -> Tabs().apply { setupTabs(it, this) } }),
+        Pair(Input::class.java, { it -> enumToVaadinCreator[it.asInput().type]?.invoke(it)?: Div() }),
+        Pair(InputNumber::class.java, { it -> enumToVaadinCreator[it.asInputNumber().type]?.invoke(it)?: Div() }),
+        Pair(Label::class.java, { it -> VaadinLabel((it as Label).caption).apply {
+            if (it.caption == "") height = "20px"
+        }}),
+        Pair(Button::class.java, { it -> com.vaadin.flow.component.button.Button((it as Button).caption) }),
+        Pair(Anchor::class.java, { it -> VaadinAnchor().apply {
+            text = (it as Anchor).caption
+            element.style.set("cursor", "default")
+        }}),
+        Pair(DownloadButton::class.java, { it -> downloadButton(it as DownloadButton) }),
+        Pair(Grid::class.java, { it -> grid(it) }),
+        Pair(InsideAppLink::class.java, { it -> RouterLink((it as InsideAppLink).caption, it.uiViewClass) })
     )
 
     private fun grid(it: UIComponent): Component = if ((it as Grid).elementType.java is Map<*, *>) {
@@ -105,50 +112,71 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
     }
 
     private val enumToVaadinCreator: Map<Enum<*>, (UIComponent) -> Component> = mapOf(
-            Pair(InputType.Text, { it -> TextField(UtilsUI.captionFromId(it.asInput().caption)).apply { valueChangeMode = ValueChangeMode.EAGER } }),
-            Pair(InputType.TextArea, { it -> TextArea(UtilsUI.captionFromId(it.asInput().caption)).apply { valueChangeMode = ValueChangeMode.EAGER } }),
-            Pair(InputType.Password, { it -> PasswordField(UtilsUI.captionFromId(it.asInput().caption)).apply { valueChangeMode = ValueChangeMode.EAGER } }),
-            Pair(InputType.Select, { it ->
-                ComboBox<Message>(UtilsUI.captionFromId(it.asInput().caption)).apply {
-                    isClearButtonVisible = true
-                    isPreventInvalidInput = true
-                }
-            }),
-            Pair(InputType.Date, { it -> DatePicker(UtilsUI.captionFromId(it.asInput().caption)).apply { isClearButtonVisible = true } }),
-            Pair(InputType.Radio, { _ -> RadioButtonGroup<String>() }),
-            Pair(InputType.Checkbox, { it -> Checkbox(UtilsUI.captionFromId(it.asInput().caption)) }),
-            Pair(InputNumberType.Double, { it -> numberField(it.asInputNumber()) }),
-            Pair(InputNumberType.Integer, { it -> integerField(it.asInputNumber()) }),
-            Pair(InputNumberType.BigDecimal, { it -> BigDecimalField(UtilsUI.captionFromId(it.asInputNumber().caption)).apply { valueChangeMode = ValueChangeMode.EAGER } }),
-            Pair(InputNumberType.Currency, { it -> BigDecimalField(UtilsUI.captionFromId(it.asInputNumber().caption)).apply { valueChangeMode = ValueChangeMode.EAGER
-                addThemeVariants(TextFieldVariant.LUMO_ALIGN_RIGHT)
-                prefixComponent = Icon(VaadinIcon.EURO)
-            }})
+        Pair(InputType.Text, { it -> TextField(UtilsUI.captionFromId(it.asInput().caption)).apply { valueChangeMode = ValueChangeMode.EAGER } }),
+        Pair(InputType.TextArea, { it -> TextArea(UtilsUI.captionFromId(it.asInput().caption)).apply { valueChangeMode = ValueChangeMode.EAGER } }),
+        Pair(InputType.Password, { it -> PasswordField(UtilsUI.captionFromId(it.asInput().caption)).apply { valueChangeMode = ValueChangeMode.EAGER } }),
+        Pair(InputType.Select, { it ->
+            ComboBox<Message>(UtilsUI.captionFromId(it.asInput().caption)).apply {
+                isClearButtonVisible = true
+                isPreventInvalidInput = true
+            }
+        }),
+        Pair(InputType.Date, { it -> DatePicker(UtilsUI.captionFromId(it.asInput().caption)).apply { isClearButtonVisible = true } }),
+        Pair(InputType.Radio, { _ -> RadioButtonGroup<String>() }),
+        Pair(InputType.Checkbox, { it -> Checkbox(UtilsUI.captionFromId(it.asInput().caption)) }),
+        Pair(InputNumberType.Double, { it -> numberField(it.asInputNumber()) }),
+        Pair(InputNumberType.Integer, { it -> integerField(it.asInputNumber()) }),
+        Pair(InputNumberType.BigDecimal, { it -> BigDecimalField(UtilsUI.captionFromId(it.asInputNumber().caption)).apply { valueChangeMode = ValueChangeMode.EAGER } }),
+        Pair(InputNumberType.Currency, { it -> BigDecimalField(UtilsUI.captionFromId(it.asInputNumber().caption)).apply { valueChangeMode = ValueChangeMode.EAGER
+            addThemeVariants(TextFieldVariant.LUMO_ALIGN_RIGHT)
+            prefixComponent = Icon(VaadinIcon.EURO)
+        }})
     )
 
-    override fun createFor(uiComponent: UIComponent): Component {
-        return objectToVaadinCreator[uiComponent::class.java]?.invoke(uiComponent)?: Div()
+    override fun createFor(uiComponent: UIComponent, pageDomain: Any?): Component {
+        return objectToVaadinCreator[uiComponent::class.java]?.invoke(uiComponent)?.apply {
+            if (this is HasText) {
+                this.text = replaceDomainValuePlaceHolder(this.text, pageDomain)
+            }
+        }?: Div()
     }
 
-    private fun integerField(input: InputNumber): Component =
-            IntegerField(UtilsUI.captionFromId(input.caption)).apply {
-                valueChangeMode = ValueChangeMode.EAGER
-                input.min?.let { min = it.toInt() }; input.max?.let { max = it.toInt() }
-                input.step?.let {
-                    step = it.toInt()
-                    setHasControls(true)
+    private fun replaceDomainValuePlaceHolder(text: String?, pageDomain: Any?): String? =
+        if (pageDomain !=null && text?.contains("\$") == true) {
+            val withReplacedText = text.split(" ").joinToString(" ") {
+                try {
+                    if (it.startsWith("\$")) {
+                        val f = pageDomain.javaClass.getDeclaredField(it.replace("\$", ""))
+                        f.isAccessible = true
+                        f.get(pageDomain).toString()
+                    } else it
+                } catch (ex: NoSuchFieldException) {
+                    it
                 }
             }
+            if (withReplacedText == text) text else withReplacedText
+        } else
+            text
+
+    private fun integerField(input: InputNumber): Component =
+        IntegerField(UtilsUI.captionFromId(input.caption)).apply {
+            valueChangeMode = ValueChangeMode.EAGER
+            input.min?.let { min = it.toInt() }; input.max?.let { max = it.toInt() }
+            input.step?.let {
+                step = it.toInt()
+                setHasControls(true)
+            }
+        }
 
     private fun numberField(input: InputNumber): Component =
-            NumberField(UtilsUI.captionFromId(input.caption)).apply {
-                valueChangeMode = ValueChangeMode.EAGER
-                input.min?.let { min = it.toDouble() }; input.max?.let { max = it.toDouble() }
-                input.step?.let {
-                    step = it.toDouble()
-                    setHasControls(true)
-                }
+        NumberField(UtilsUI.captionFromId(input.caption)).apply {
+            valueChangeMode = ValueChangeMode.EAGER
+            input.min?.let { min = it.toDouble() }; input.max?.let { max = it.toDouble() }
+            input.step?.let {
+                step = it.toDouble()
+                setHasControls(true)
             }
+        }
 
     private fun setupTabs(uiComponent: UIComponent, tabs: Tabs) {
         tabs.setSizeFull()
@@ -165,7 +193,7 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
 
     override fun setCaption(componentById: Component, caption: String) {
         fun methodOrNull(component: Component, methodName: String) =
-                component::class.java.methods.firstOrNull { it.name == methodName }
+            component::class.java.methods.firstOrNull { it.name == methodName }
         methodOrNull(componentById, "setLabel")?: methodOrNull(componentById, "setText")?.invoke(componentById, caption)
     }
 
@@ -193,7 +221,7 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
                 val component = uiGrid.gridConfiguration.columnGenerators[it]
                 val ui = component as UIComponent
                 ui.javaClass.methods.firstOrNull { method -> method.name == "setCaption" }?.invoke(ui, "")
-                setupComponentForGrid(item, it, grid, createFor(ui))
+                setupComponentForGrid(item, it, grid, createFor(ui, item))
             })).setKey(it).setHeader(captionFrom(it))
         }
 
@@ -213,35 +241,35 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
     }
 
     private val componentSetupForGrid: Map<Class<out Component>, (Any, String, VaadinGrid<Any>, Component) -> Unit > = mapOf(
-            Pair(TextField::class.java, { item, key, _, it -> (it as TextField).apply {
-                label = ""
-                if (item is Map<*, *>) {
-                    addValueChangeListener { v -> (item as MutableMap<String, Any?>)[key] = v.value }
-                    setValue(item[key], this)
-                } else {
-                    val f = item.javaClass.getDeclaredField(key)
-                    f.isAccessible = true
-                    addValueChangeListener { v -> f.set(item, v.value) }
-                    setValue(f.get(item), this)
-                }
-            } }),
-            Pair(ComboBox::class.java, { item, key, _, it -> (it as ComboBox<Any>).apply {
-                label = ""
-                if (item is Map<*, *>) {
-                    addDataProviderToSelect(this, (item as MutableMap<String, Any?>)[key + "DataProvider"] as DataProvider)
-                    addValueChangeListener { v -> item[key] = v.value }
-                    setValue(item[key], this)
-                } else {
-                    val dataProvider = item.javaClass.getDeclaredField(key + "DataProvider")
-                    dataProvider.isAccessible = true
-                    addDataProviderToSelect(this, dataProvider.get(item) as DataProvider)
+        Pair(TextField::class.java, { item, key, _, it -> (it as TextField).apply {
+            label = ""
+            if (item is Map<*, *>) {
+                addValueChangeListener { v -> (item as MutableMap<String, Any?>)[key] = v.value }
+                setValue(item[key], this)
+            } else {
+                val f = item.javaClass.getDeclaredField(key)
+                f.isAccessible = true
+                addValueChangeListener { v -> f.set(item, v.value) }
+                setValue(f.get(item), this)
+            }
+        } }),
+        Pair(ComboBox::class.java, { item, key, _, it -> (it as ComboBox<Any>).apply {
+            label = ""
+            if (item is Map<*, *>) {
+                addDataProviderToSelect(this, (item as MutableMap<String, Any?>)[key + "DataProvider"] as DataProvider)
+                addValueChangeListener { v -> item[key] = v.value }
+                setValue(item[key], this)
+            } else {
+                val dataProvider = item.javaClass.getDeclaredField(key + "DataProvider")
+                dataProvider.isAccessible = true
+                addDataProviderToSelect(this, dataProvider.get(item) as DataProvider)
 
-                    val f = item.javaClass.getDeclaredField(key)
-                    f.isAccessible = true
-                    addValueChangeListener { v -> f.set(item, v.value) }
-                    setValue(f.get(item), this)
-                }
-            } })
+                val f = item.javaClass.getDeclaredField(key)
+                f.isAccessible = true
+                addValueChangeListener { v -> f.set(item, v.value) }
+                setValue(f.get(item), this)
+            }
+        } })
     )
 
     private fun setupComponentForGrid(item: Any, key: String, grid: VaadinGrid<Any>, component: Component): Component = component.apply {
@@ -249,15 +277,15 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
     }
 
     private fun downloadButton(downloadButton: DownloadButton): Component {
-        val download = Anchor("")
+        val download = VaadinAnchor("")
         download.element.setAttribute("download", true)
         download.add(com.vaadin.flow.component.button.Button(downloadButton.caption))
         return download
     }
 
     override fun getMainComponentFor(componentById: Component): Component =
-            if (componentById is Anchor) componentById.children.findFirst().get()
-            else componentById
+        if (componentById is VaadinAnchor && componentById.children.findFirst().isPresent) componentById.children.findFirst().get()
+        else componentById
 
     override fun cleanView(component: Component) {
         component.apply { (this as HasComponents).removeAll() }
@@ -266,13 +294,13 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
     override fun setValue(fieldValue: Any?, componentById: Component) = ComponentHandler.setValue(fieldValue, componentById)
 
     override fun getValue(componentById: Component): Any? =
-            when(componentById) {
-                is NumberField -> componentById.value?.toDouble()?:0.0
-                is IntegerField -> componentById.value?.toInt()?:0
-                is BigDecimalField -> componentById.value
-                is VaadinGrid<*> -> if (componentById.selectedItems.isNotEmpty()) componentById.selectedItems.first() else null
-                else -> (componentById as AbstractField<*, *>).getValue()
-            }
+        when(componentById) {
+            is NumberField -> componentById.value?.toDouble()?:0.0
+            is IntegerField -> componentById.value?.toInt()?:0
+            is BigDecimalField -> componentById.value
+            is VaadinGrid<*> -> if (componentById.selectedItems.isNotEmpty()) componentById.selectedItems.first() else null
+            else -> (componentById as AbstractField<*, *>).getValue()
+        }
 
     override fun addValueChangeListener(component: Component, listener: (Any?) -> Unit) {
         when(component) {
@@ -299,12 +327,13 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
         when(component) {
             is VaadinGrid<*> -> component.addItemClickListener { action() }
             is ClickNotifier<*> -> (component as ClickNotifier<*>).addClickListener { action() }
+            is VaadinAnchor -> component.element.addEventListener("click") { action() }
             else -> println("Error on component ${component.id}")
         }
     }
 
     override fun addDownloadInputStream(action: DownloadAction, domain: Any, componentById: Component) {
-        (componentById as Anchor).setHref(StreamResource(action.fileNameGenerator(domain), InputStreamFactory { action.onDataDomainInputStream(domain) }))
+        (componentById as VaadinAnchor).setHref(StreamResource(action.fileNameGenerator(domain), InputStreamFactory { action.onDataDomainInputStream(domain) }))
     }
 
     override fun addDataProviderTo(uiComponent: UIComponent, component: Component, dataProvider: DataProvider) {

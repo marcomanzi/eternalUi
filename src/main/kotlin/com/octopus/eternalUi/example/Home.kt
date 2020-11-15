@@ -33,8 +33,8 @@ class Home(@Autowired var simpleInputs: SimpleInputs, @Autowired val simpleForm:
                         Tab("Dynamic Layout", dynamicLayout),
                         Tab("Other Utils", messagesAndOtherUtils)
                 )
-        ), beforeEnter = { it.page.pageDomain.apply {
-    it.setCaptionTo("activateDebugButton", if (debugModeActive) "Deactivate Debug Button" else "Activate Debug Button")
+        ), beforeEnter = { it.pageDomain.apply {
+//    it.setCaptionTo("activateDebugButton", if (debugModeActive) "Deactivate Debug Button" else "Activate Debug Button")
 }}) {
     fun activateDebugButtonClicked(ui: EternalUI): EternalUI = ui.apply {
         debugModeActive = !debugModeActive

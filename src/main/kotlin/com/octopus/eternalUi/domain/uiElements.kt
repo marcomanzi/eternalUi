@@ -34,6 +34,7 @@ data class Input(private val _id: String, val type: InputType = InputType.Text, 
 enum class InputNumberType { Double, Integer, BigDecimal, Currency }
 data class InputNumber(private val _id: String, val type: InputNumberType = InputNumberType.Double, private val _cssClassName: String = "", val caption: String = captionFrom(_id),
                        val step: Number? = null, val min: Number? = null, val max: Number? = null): UIComponent(_id, _cssClassName)
+data class Anchor(private val _id: String, private val _cssClassName: String = "", val caption: String = captionFrom(_id)): UIComponent(_id, _cssClassName)
 data class Button(private val _id: String, private val _cssClassName: String = "", val caption: String = captionFrom(_id)): UIComponent(_id, _cssClassName)
 data class DownloadButton(private val _id: String, private val _cssClassName: String = "", val caption: String = captionFrom(_id)): UIComponent(_id, _cssClassName)
 data class InsideAppLink(private val _id: String, val uiViewClass: Class<out Component>, private val _cssClassName: String = "",
@@ -51,7 +52,7 @@ open class EmptyDomain
 
 @Suppress("UNCHECKED_CAST")
 abstract class Page(val uiView: UIComponent, var pageDomain: Any = EmptyDomain(),
-                             var set: Boolean = false, var beforeEnter: ((EternalUI) -> Any)? = null
+                             var set: Boolean = false, var beforeEnter: ((Page) -> Any)? = null
 ):
         UIComponent(UUID.randomUUID().toString(), pageDomain.javaClass.simpleName) {
     private val observers: MutableMap<String, (Any?) -> Unit> = mutableMapOf()
