@@ -299,15 +299,17 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
             is IntegerField -> componentById.value?.toInt()?:0
             is BigDecimalField -> componentById.value
             is VaadinGrid<*> -> if (componentById.selectedItems.isNotEmpty()) componentById.selectedItems.first() else null
-            else -> (componentById as AbstractField<*, *>).getValue()
+            is AbstractField<*, *> -> componentById.getValue()
+            else -> null
         }
 
     override fun addValueChangeListener(component: Component, listener: (Any?) -> Unit) {
         when(component) {
             is ComboBox<*> -> component.addValueChangeListener { if (it.oldValue?.toString()?:"" != it.value?.toString()?:"") listener.invoke(it.value) }
             is VaadinGrid<*> -> component.addSelectionListener { if (it.isFromClient) listener.invoke(it.allSelectedItems) }
-            else -> (component as AbstractField<*, *>).addValueChangeListener { field ->
-                field.value.let { newValue -> listener.invoke(newValue) } }
+            else -> if (component is AbstractField<*, *>) {
+                component.addValueChangeListener { field -> field.value.let { newValue -> listener.invoke(newValue) } }
+            }
         }
     }
 
@@ -315,7 +317,9 @@ class Vaadin15UiElementsHandler : VaadinElementsHandler {
         when(component) {
             is ComboBox<*> -> component.addValueChangeListener { if (it.oldValue?.toString()?:"" != it.value?.toString()?:"") listener.invoke(it.value) }
             is VaadinGrid<*> -> component.addSelectionListener { listener.invoke(it.allSelectedItems) }
-            else -> (component as AbstractField<*, *>).addValueChangeListener { listener.invoke(it.value) }
+            else -> if (component is AbstractField<*, *>) {
+                    component.addValueChangeListener { listener.invoke(it.value) }
+            }
         }
     }
 
